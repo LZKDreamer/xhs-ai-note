@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="zh-CN" data-resolution="portrait">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>[1/6] 提示词和技能，到底差在哪</title>
+
+    <!-- 复用图文的设计系统（studio/design 是 templates/ 的目录联接） -->
+    <link rel="stylesheet" href="./design/components.css" />
+    <script src="./vendor/gsap.min.js"></script>
+
+    <style>
+      /* ==========================================================================
+         画布 1080×1920（9:16）
+         舞台 1500 + 字幕带 420（原 1440/480：字幕改小后，主次才反过来）
+         ========================================================================== */
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        padding: 0;
+        gap: 0;
+        overflow: hidden;
+        align-content: start;
+        justify-items: start;
+        background: var(--bg);
+        --h: 1500px;
+      }
+      #root {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+      }
+
+      /* ---------- L1 网格：全片极慢漂移（约 12px/s，30s 一循环） ---------- */
+      .bg-grid {
+        position: absolute;
+        left: -180px;
+        top: -180px;
+        width: 1440px;
+        height: 2280px;
+        background-image: linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px);
+        background-size: 96px 96px;
+        opacity: 0.5;
+      }
+      /* ---------- L3 呼吸光：极浅，周期 10s ---------- */
+      .bg-glow {
+        position: absolute;
+        left: 50%;
+        top: 620px;
+        width: 1240px;
+        height: 1240px;
+        margin: -620px 0 0 -620px;
+        background: radial-gradient(circle, var(--brand-300) 0%, transparent 62%);
+        opacity: 0.08;
+      }
+
+      /* ==========================================================================
+         场景骨架
+         ========================================================================== */
+      .scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      /* L2 场景底纹：每个场景一层语义图形 */
+      .tex {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      /* 场景 3：一条竖直虚线把画面一分为二（左虚右实的隐喻） */
+      .tex-mid {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        margin-left: -2px;
+        background: repeating-linear-gradient(180deg, var(--line-strong) 0 18px, transparent 18px 36px);
+        opacity: 0.55;
+      }
+      /* 场景 4：三条水平参考线，对应三行 */
+      .tex-rule {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--line);
+      }
+      /* 场景 5：两条流程轨迹线 */
+      .tex-trace {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--line);
+        opacity: 0.7;
+      }
+      .scene .card {
+        flex: none;
+        /* 图文卡片顶部对齐，视频整帧必须垂直居中；同时整体放大一档
+           （9:16 是手机上近距离看的大屏，图文尺寸放进来会显小）。
+           只覆盖令牌，不动设计系统本身。 */
+        justify-content: center;
+        --fs-2: 118px;
+        --fs-4: 76px;
+        --fs-5: 64px;
+        --fs-6: 52px;
+        --fs-7: 42px;
+        --sp-3: 32px;
+        --sp-4: 40px;
+        --sp-5: 52px;
+        --sp-6: 64px;
+        --sp-8: 84px;
+      }
+
+      /* ---------- 字幕带：46px（占屏宽 4.3%），一条最多 2 行 ----------
+         字幕是**全片一层**，不分场景：位置固定、永远在最上层。
+         内容由 scripts/build-subs.mjs 从 captions.json 生成，不手写。 */
+      .subs {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 1500px;
+        height: 420px;
+      }
+      .sub-line {
+        position: absolute;
+        left: var(--pad-x);
+        right: var(--pad-x);
+        top: var(--sp-4);
+        text-align: center;
+        font-size: 46px;
+        line-height: 1.4;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      /* ==========================================================================
+         通用零件
+         ========================================================================== */
+      .mask { display: block; overflow: hidden; }
+      .mask-i { display: block; }
+
+      /* 视觉母题：一个橙色小方块 = 「一次对话 / 一个任务」 */
+      .m {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        background: var(--brand-500);
+        flex: none;
+        display: block;
+      }
+      .m.ghost { background: transparent; border: 3px dashed var(--line-strong); }
+      .m.dim { background: var(--line-strong); }
+
+      /* 图标：描边 3px（Lucide 默认 2，按 24 视口换算后固定成 3px 视觉粗细） */
+      .ic {
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: none;
+        display: block;
+      }
+      .ic-lg { width: 64px; height: 64px; stroke-width: 1.15; }
+      .ic-md { width: 48px; height: 48px; stroke-width: 1.5; }
+      .ic-sm { width: 34px; height: 34px; stroke-width: 2.1; }
+      .ic-brand { color: var(--brand-600); }
+      .ic-ink { color: var(--ink); }
+      .ic-weak { color: var(--ink-4); }
+
+      /* 图纸感标注：编号圆点 + 引线 + 小字 */
+      .note {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 26px;
+        line-height: 1.2;
+        color: var(--ink-3);
+      }
+      .note .badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--brand-500);
+        color: var(--on-brand);
+        font-size: 20px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+
+      /* ==========================================================================
+         场景 1 · 钩子：同一个任务被复制 5 次
+         ========================================================================== */
+      .s1-stack { display: flex; flex-direction: column; gap: var(--sp-3); margin-top: var(--sp-6); }
+      .s1-row { display: flex; align-items: center; gap: var(--sp-3); height: 92px; }
+      .s1-bar { height: 30px; border-radius: 15px; background: var(--line-strong); }
+      .s1-bar.w1 { width: 60%; }
+      .s1-bar.w2 { width: 74%; }
+      .s1-bar.w3 { width: 52%; }
+      .s1-bar.w4 { width: 80%; }
+      .s1-bar.w5 { width: 66%; }
+      .s1-count { margin-top: var(--sp-6); display: flex; align-items: baseline; gap: var(--sp-3); }
+      .s1-count .lbl { font-size: var(--fs-5); font-weight: 900; color: var(--ink-2); }
+      .s1-count .num { font-family: var(--font-display); font-size: var(--fs-1); line-height: 1; color: var(--brand-600); }
+      #s1-rule { display: block; width: 100%; height: 10px; margin-top: var(--sp-6); background: var(--brand-500); border-radius: 5px; transform-origin: left center; }
+
+      /* ==========================================================================
+         场景 2 · 共鸣：四个一模一样的输入，全部变灰
+         ========================================================================== */
+      .s2-list { position: relative; display: flex; flex-direction: column; gap: var(--sp-4); margin-top: var(--sp-5); }
+      .s2-row { display: flex; align-items: center; gap: var(--sp-3); }
+      .s2-bubble {
+        flex: 1;
+        height: 76px;
+        border: 3px solid var(--line-strong);
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        padding: 0 var(--sp-3);
+        gap: var(--sp-2);
+      }
+      .s2-bubble i { display: block; height: 18px; border-radius: 9px; background: var(--line-strong); }
+      .s2-bubble i:nth-child(1) { width: 42%; }
+      .s2-bubble i:nth-child(2) { width: 24%; }
+      .s2-idx { font-size: 28px; font-weight: 900; color: var(--ink-4); font-family: var(--font-mono); }
+      #s2-strike { position: absolute; left: 0; top: 50%; width: 100%; height: 8px; margin-top: -4px; background: var(--warn); border-radius: 4px; transform-origin: left center; }
+      .s2-turn { margin-top: var(--sp-8); font-size: var(--fs-5); font-weight: 900; line-height: 1.34; color: var(--ink); }
+      .s2-turn em { font-style: normal; color: var(--brand-600); }
+
+      /* ==========================================================================
+         场景 3 · 给答案：时间轴对比（技能那条伸出画面）
+         ========================================================================== */
+      .tl { margin-top: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-4); }
+      .tl-row { display: flex; align-items: center; gap: var(--sp-3); }
+      .tl-row .who { display: flex; align-items: center; gap: 12px; width: 190px; flex: none; font-size: 32px; font-weight: 900; color: var(--ink-2); }
+      .tl-track { position: relative; height: 44px; border-radius: 22px; background: var(--surface-2); flex: 1; overflow: hidden; }
+      .tl-row.out .tl-track { overflow: visible; }
+      /* ⚠ 必须有真实宽度：绝对定位元素不给 width 会收缩成 0 宽，
+         scaleX 作用在 0 宽元素上什么都看不见（和探路片同一个坑，实测踩过）。 */
+      .tl-fill { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border-radius: 22px; transform-origin: left center; }
+      .tl-row.a .tl-fill { background: repeating-linear-gradient(90deg, var(--line-strong) 0 14px, transparent 14px 26px); }
+      .tl-row.b .tl-fill { background: var(--brand-500); }
+      .tl-mark { font-size: 28px; font-weight: 900; width: 150px; flex: none; text-align: right; }
+      .tl-row.a .tl-mark { color: var(--ink-4); }
+      .tl-row.b .tl-mark { color: var(--brand-700); }
+      .s3-notes { margin-top: var(--sp-6); display: flex; gap: var(--sp-6); }
+
+      /* ==========================================================================
+         场景 4 · 三点差别：左边标签 + 右边图形
+         ========================================================================== */
+      .s4-table { display: flex; flex-direction: column; gap: var(--sp-5); margin-top: var(--sp-4); }
+      .s4-row { position: relative; padding-left: var(--sp-5); }
+      .s4-ind { position: absolute; left: 0; top: 6px; width: 10px; height: calc(100% - 12px); border-radius: 5px; background: var(--brand-500); transform-origin: top center; }
+      .s4-k { font-size: 34px; font-weight: 900; color: var(--brand-700); letter-spacing: 0.06em; margin-bottom: var(--sp-2); }
+      .s4-line { display: flex; align-items: center; gap: var(--sp-3); margin-top: 14px; }
+      .s4-tag { width: 150px; flex: none; font-size: 32px; font-weight: 900; color: var(--ink-2); white-space: nowrap; }
+      .s4-body { display: flex; align-items: center; gap: 18px; font-size: 32px; color: var(--ink-2); white-space: nowrap; }
+      .s4-out { font-size: 28px; font-weight: 900; color: var(--ink-4); }
+      .s4-row.live .s4-out { color: var(--brand-700); }
+      .s4-chips { display: flex; gap: 10px; }
+      .s4-chip { border: 3px solid var(--line-strong); border-radius: 10px; padding: 6px 14px; font-size: 26px; font-weight: 700; color: var(--ink-3); }
+
+      /* ==========================================================================
+         场景 5 · 例子：前后流程图（上面绕弯，下面直插）
+         ========================================================================== */
+      .s5-title { font-size: var(--fs-6); font-weight: 900; color: var(--ink); }
+      .s5-flow { margin-top: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-6); }
+      .s5-lane { display: flex; align-items: center; gap: 18px; }
+      .s5-lane .cap { width: 200px; flex: none; font-size: 30px; font-weight: 900; color: var(--ink-3); white-space: nowrap; }
+      .s5-node { display: flex; align-items: center; gap: 12px; border: 3px solid var(--line-strong); border-radius: 14px; padding: 12px 18px; font-size: 30px; font-weight: 700; color: var(--ink-2); background: var(--surface); white-space: nowrap; }
+      .s5-node.hot { border-color: var(--brand-500); background: var(--brand-50); color: var(--ink); }
+      .s5-link { width: 46px; height: 4px; background: var(--line-strong); border-radius: 2px; transform-origin: left center; flex: none; }
+      .s5-link.long { width: 240px; background: var(--brand-500); }
+      .s5-detour { display: flex; flex-direction: column; gap: 10px; }
+
+      /* ==========================================================================
+         场景 6 · 收尾：判定框 → 母题聚成勾
+         ========================================================================== */
+      .s6-judge { display: flex; align-items: center; gap: var(--sp-4); margin-top: var(--sp-6); }
+      .s6-box { border: 4px solid var(--ink); border-radius: var(--radius); padding: var(--sp-4) var(--sp-5); font-size: var(--fs-6); font-weight: 900; color: var(--ink); white-space: nowrap; }
+      .s6-yes { display: flex; align-items: center; gap: 16px; font-size: var(--fs-6); font-weight: 900; color: var(--brand-700); white-space: nowrap; }
+      .s6-ask { margin-top: var(--sp-8); font-size: var(--fs-4); font-weight: 900; line-height: 1.35; color: var(--brand-700); }
+    </style>
+  </head>
+
+  <body>
+    <div
+      id="root"
+      data-composition-id="wb-ch05-01"
+      data-start="0"
+      data-width="1080"
+      data-height="1920"
+      data-duration="78.888"
+    >
+      <!-- Lucide 图标 sprite（ISC；声明见 vendor/icons/LICENSES.md） -->
+      <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+        <symbol id="i-message-circle" viewBox="0 0 24 24"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" /></symbol>
+        <symbol id="i-infinity" viewBox="0 0 24 24"><path d="M6 16c5 0 7-8 12-8a4 4 0 0 1 0 8c-5 0-7-8-12-8a4 4 0 1 0 0 8" /></symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="M12 6v6l4 2" /></symbol>
+        <symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <path d="m15 9-6 6" /> <path d="m9 9 6 6" /></symbol>
+        <symbol id="i-folder" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" /></symbol>
+        <symbol id="i-type" viewBox="0 0 24 24"><path d="M12 4v16" /> <path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2" /> <path d="M9 20h6" /></symbol>
+        <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z" /> <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12" /> <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17" /></symbol>
+        <symbol id="i-file-text" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M10 9H8" /> <path d="M16 13H8" /> <path d="M16 17H8" /></symbol>
+        <symbol id="i-terminal" viewBox="0 0 24 24"><path d="M12 19h8" /> <path d="m4 17 6-6-6-6" /></symbol>
+        <symbol id="i-layout-template" viewBox="0 0 24 24"><rect width="18" height="7" x="3" y="3" rx="1" /> <rect width="9" height="7" x="3" y="14" rx="1" /> <rect width="5" height="7" x="16" y="14" rx="1" /></symbol>
+        <symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /> <circle cx="9" cy="9" r="2" /> <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /></symbol>
+        <symbol id="i-bot" viewBox="0 0 24 24"><path d="M12 8V4H8" /> <rect width="16" height="12" x="4" y="8" rx="2" /> <path d="M2 14h2" /> <path d="M20 14h2" /> <path d="M15 13v2" /> <path d="M9 13v2" /></symbol>
+        <symbol id="i-mouse-pointer-click" viewBox="0 0 24 24"><path d="M14 4.1 12 6" /> <path d="m5.1 8-2.9-.8" /> <path d="m6 12-1.9 2" /> <path d="M7.2 2.2 8 5.1" /> <path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z" /></symbol>
+        <symbol id="i-zap" viewBox="0 0 24 24"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z" /></symbol>
+        <symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4" /> <path d="M3 11v-1a4 4 0 0 1 4-4h14" /> <path d="m7 22-4-4 4-4" /> <path d="M21 13v1a4 4 0 0 1-4 4H3" /></symbol>
+        <symbol id="i-refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></symbol>
+        <symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M21.801 10A10 10 0 1 1 17 3.335" /> <path d="m9 11 3 3L22 4" /></symbol>
+        <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol>
+        <symbol id="i-git-branch" viewBox="0 0 24 24"><path d="M15 6a9 9 0 0 0-9 9V3" /> <circle cx="18" cy="6" r="3" /> <circle cx="6" cy="18" r="3" /></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+        <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" /> <path d="M20 2v4" /> <path d="M22 4h-4" /> <circle cx="4" cy="20" r="2" /></symbol>
+        <symbol id="i-hard-drive" viewBox="0 0 24 24"><path d="M10 16h.01" /> <path d="M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /> <path d="M21.946 12.013H2.054" /> <path d="M6 16h.01" /></symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14" /> <path d="M12 5v14" /></symbol>
+      </svg>
+
+      <div class="bg-grid" id="bg-grid"></div>
+      <div class="bg-glow" id="bg-glow"></div>
+
+      <!-- 字幕（全片一层，由 scripts/build-subs.mjs 从 captions.json 生成） -->
+      <div class="subs" id="subs">
+        <!-- SUBS:START -->
+        <div class="sub-line" data-sub="0">同一件事，你跟 AI 说过多少遍了？</div>
+        <div class="sub-line" data-sub="1">换个对话，就得从头再教一遍。</div>
+        <div class="sub-line" data-sub="2">你以为是自己提示词写得不够好，</div>
+        <div class="sub-line" data-sub="3">于是反复改措辞。</div>
+        <div class="sub-line" data-sub="4">不要写得太 AI，别太啰嗦，</div>
+        <div class="sub-line" data-sub="5">按这个格式来，要有自己的判断。</div>
+        <div class="sub-line" data-sub="6">这些话你说了一遍又一遍，</div>
+        <div class="sub-line" data-sub="7">AI 却像每次都是第一次见你。</div>
+        <div class="sub-line" data-sub="8">问题不在措辞。</div>
+        <div class="sub-line" data-sub="9">先分清两个东西：提示词，是一次性的任务；</div>
+        <div class="sub-line" data-sub="10">技能，也就是 Skill，是能存下来的做法。</div>
+        <div class="sub-line" data-sub="11">任务做完就结束了。</div>
+        <div class="sub-line" data-sub="12">做法可以留下来，下次接着用。</div>
+        <div class="sub-line" data-sub="13">差别主要在这三个地方。</div>
+        <div class="sub-line" data-sub="14">第一，活多久。</div>
+        <div class="sub-line" data-sub="15">提示词只活在那一次对话里，窗口一关就没了；</div>
+        <div class="sub-line" data-sub="16">技能是存在你电脑上的文件，下次打开还在。</div>
+        <div class="sub-line" data-sub="17">第二，能装什么。</div>
+        <div class="sub-line" data-sub="18">提示词里只能写文字；技能是一个文件夹，</div>
+        <div class="sub-line" data-sub="19">说明、脚本、模板可以一起带上。</div>
+        <div class="sub-line" data-sub="20">第三，谁来调它。</div>
+        <div class="sub-line" data-sub="21">提示词要你每次主动说；</div>
+        <div class="sub-line" data-sub="22">技能是 AI 自己判断，相关就拿出来用。</div>
+        <div class="sub-line" data-sub="23">举个例子。</div>
+        <div class="sub-line" data-sub="24">你让 AI 写完文章，</div>
+        <div class="sub-line" data-sub="25">总得再去掉那股 AI 味。</div>
+        <div class="sub-line" data-sub="26">用提示词，你每次都重说一遍：</div>
+        <div class="sub-line" data-sub="27">不要「不是而是」，不要排比，不要双引号。</div>
+        <div class="sub-line" data-sub="28">做成技能以后，你只要把文章丢给它，</div>
+        <div class="sub-line" data-sub="29">这些规矩它自己知道。</div>
+        <div class="sub-line" data-sub="30">我的判断是：只要有一件事，</div>
+        <div class="sub-line" data-sub="31">你每周都要跟 AI 重复交代，它就值得做成技能。</div>
+        <div class="sub-line" data-sub="32">你最常跟 AI 重复的那句话，是什么？</div>
+        <!-- SUBS:END -->
+      </div>
+
+      <audio
+        id="narration"
+        src="./videos/wb-ch05-01-prompt-vs-skill/narration.mp3"
+        data-start="0"
+        data-duration="78.888"
+        data-track-index="20"
+      ></audio>
+
+      <!-- ══════════════ 场景 1 · 0.00 – 5.09 : 同一个任务被复制 5 次 ══════════════ -->
+      <section id="scene-1" class="clip scene" data-start="0" data-duration="5.09" data-track-index="1">
+        <div class="tex" data-tex="1">
+          <div class="bg-grid" style="background-size: 48px 48px; opacity: 0.35"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow" id="s1-eyebrow">同一件事，说过多少遍</div>
+          <div class="s1-stack">
+            <div class="s1-row" data-s1row><span class="m"></span><span class="s1-bar w1"></span></div>
+            <div class="s1-row" data-s1row><span class="m"></span><span class="s1-bar w2"></span></div>
+            <div class="s1-row" data-s1row><span class="m"></span><span class="s1-bar w3"></span></div>
+            <div class="s1-row" data-s1row><span class="m"></span><span class="s1-bar w4"></span></div>
+            <div class="s1-row" data-s1row><span class="m"></span><span class="s1-bar w5"></span></div>
+          </div>
+          <div class="s1-count">
+            <span class="lbl">第</span><span class="num" id="s1-num">?</span><span class="lbl">遍</span>
+          </div>
+          <span id="s1-rule"></span>
+        </div>
+      </section>
+
+      <!-- ══════════════ 场景 2 · 5.09 – 18.15 : 四个一模一样的输入，全部变灰 ══════════════ -->
+      <section id="scene-2" class="clip scene" data-start="5.09" data-duration="13.06" data-track-index="2">
+        <div class="tex" data-tex="2">
+          <div class="bg-grid" style="background-size: 96px 48px; opacity: 0.4"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow" id="s2-eyebrow">你以为的问题</div>
+          <div class="s2-list">
+            <div class="s2-row" data-s2row>
+              <span class="m"></span>
+              <span class="s2-bubble"><i></i><i></i></span>
+              <span class="s2-idx">1</span>
+            </div>
+            <div class="s2-row" data-s2row>
+              <span class="m"></span>
+              <span class="s2-bubble"><i></i><i></i></span>
+              <span class="s2-idx">2</span>
+            </div>
+            <div class="s2-row" data-s2row>
+              <span class="m"></span>
+              <span class="s2-bubble"><i></i><i></i></span>
+              <span class="s2-idx">3</span>
+            </div>
+            <div class="s2-row" data-s2row>
+              <span class="m"></span>
+              <span class="s2-bubble"><i></i><i></i></span>
+              <span class="s2-idx">4</span>
+            </div>
+            <span id="s2-strike"></span>
+          </div>
+          <div class="s2-turn" id="s2-turn">AI 却像<em>第一次见你</em></div>
+        </div>
+      </section>
+
+      <!-- ══════════════ 场景 3 · 18.15 – 30.41 : 时间轴对比 ══════════════ -->
+      <section id="scene-3" class="clip scene" data-start="18.15" data-duration="12.26" data-track-index="3">
+        <div class="tex" data-tex="3">
+          <div class="tex-mid"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow" id="s3-eyebrow">问题不在措辞</div>
+          <div class="tl">
+            <div class="tl-row a" data-tlrow>
+              <span class="who"><svg class="ic ic-md ic-weak"><use href="#i-message-circle" /></svg>提示词</span>
+              <span class="tl-track"><span class="tl-fill" data-tlfill></span></span>
+              <span class="tl-mark">对话内</span>
+            </div>
+            <div class="tl-row b out" data-tlrow>
+              <span class="who"><svg class="ic ic-md ic-brand"><use href="#i-folder" /></svg>技能</span>
+              <span class="tl-track"><span class="tl-fill" data-tlfill></span></span>
+              <span class="tl-mark">长期</span>
+            </div>
+          </div>
+          <div class="s3-notes">
+            <div class="note" id="s3-n1"><span class="badge">1</span>用完就结束</div>
+            <div class="note" id="s3-n2"><span class="badge">2</span>存在电脑上，下次还在</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ 场景 4 · 30.41 – 55.47 : 三点差别 ══════════════ -->
+      <section id="scene-4" class="clip scene" data-start="30.41" data-duration="25.06" data-track-index="4">
+        <div class="tex" data-tex="4">
+          <div class="tex-rule" style="top: 40%"></div>
+          <div class="tex-rule" style="top: 60%"></div>
+          <div class="tex-rule" style="top: 80%"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow" id="s4-eyebrow">差别主要在这三个地方</div>
+          <div class="s4-table">
+            <div class="s4-row" data-s4row>
+              <span class="s4-ind" data-s4ind></span>
+              <div class="s4-k">第一 · 活多久</div>
+              <div class="s4-line">
+                <span class="s4-tag">提示词</span>
+                <span class="s4-body"
+                  ><svg class="ic ic-sm ic-weak"><use href="#i-message-circle" /></svg
+                  ><span class="s4-out">1 次对话</span></span
+                >
+              </div>
+              <div class="s4-line">
+                <span class="s4-tag">技能</span>
+                <span class="s4-body"
+                  ><svg class="ic ic-sm ic-brand"><use href="#i-infinity" /></svg
+                  ><span class="s4-out">长期</span></span
+                >
+              </div>
+            </div>
+            <div class="s4-row" data-s4row>
+              <span class="s4-ind" data-s4ind></span>
+              <div class="s4-k">第二 · 能装什么</div>
+              <div class="s4-line">
+                <span class="s4-tag">提示词</span>
+                <span class="s4-body"
+                  ><svg class="ic ic-sm ic-weak"><use href="#i-type" /></svg
+                  ><span class="s4-out">只有文字</span></span
+                >
+              </div>
+              <div class="s4-line">
+                <span class="s4-tag">技能</span>
+                <span class="s4-body"
+                  ><svg class="ic ic-sm ic-brand"><use href="#i-layers" /></svg>
+                  <span class="s4-chips"
+                    ><span class="s4-chip">说明</span><span class="s4-chip">脚本</span
+                    ><span class="s4-chip">模板</span><span class="s4-chip">资源</span></span
+                  ></span
+                >
+              </div>
+            </div>
+            <div class="s4-row" data-s4row>
+              <span class="s4-ind" data-s4ind></span>
+              <div class="s4-k">第三 · 谁来调它</div>
+              <div class="s4-line">
+                <span class="s4-tag">提示词</span>
+                <span class="s4-body"
+                  ><svg class="ic ic-sm ic-weak"><use href="#i-user" /></svg
+                  ><svg class="ic ic-sm ic-weak"><use href="#i-mouse-pointer-click" /></svg
+                  ><span class="s4-out">每次手动</span></span
+                >
+              </div>
+              <div class="s4-line">
+                <span class="s4-tag">技能</span>
+                <span class="s4-body"
+                  ><svg class="ic ic-sm ic-brand"><use href="#i-bot" /></svg
+                  ><svg class="ic ic-sm ic-brand"><use href="#i-zap" /></svg
+                  ><span class="s4-out">自动判断</span></span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════ 场景 5 · 55.47 – 69.68 : 前后流程图 ══════════════ -->
+      <section id="scene-5" class="clip scene" data-start="55.47" data-duration="14.21" data-track-index="5">
+        <div class="tex" data-tex="5">
+          <div class="tex-trace" style="top: 38%"></div>
+          <div class="tex-trace" style="top: 62%"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow" id="s5-eyebrow">举个例子 · 去掉那股 AI 味</div>
+          <div class="s5-flow">
+            <div class="s5-lane" data-s5lane>
+              <span class="cap">用提示词</span>
+              <span class="s5-node"><svg class="ic ic-sm ic-weak"><use href="#i-file-text" /></svg>文章</span>
+              <span class="s5-link" data-s5link></span>
+              <span class="s5-detour">
+                <span class="s5-node"><svg class="ic ic-sm ic-weak"><use href="#i-user" /></svg>你</span>
+                <span class="s5-node hot"><svg class="ic ic-sm ic-brand"><use href="#i-repeat" /></svg>每次重贴规则</span>
+              </span>
+              <span class="s5-link" data-s5link></span>
+              <span class="s5-node"><svg class="ic ic-sm ic-weak"><use href="#i-check-circle" /></svg>成品</span>
+            </div>
+            <div class="s5-lane" data-s5lane>
+              <span class="cap">用技能</span>
+              <span class="s5-node"><svg class="ic ic-sm ic-weak"><use href="#i-file-text" /></svg>文章</span>
+              <span class="s5-link long" data-s5link></span>
+              <span class="s5-node hot"><svg class="ic ic-sm ic-brand"><use href="#i-folder" /></svg>技能</span>
+              <span class="s5-link" data-s5link></span>
+              <span class="s5-node"><svg class="ic ic-sm ic-brand"><use href="#i-check-circle" /></svg>成品</span>
+            </div>
+          </div>
+          <div class="note" id="s5-note"><span class="badge">✓</span>规矩已经存好了</div>
+        </div>
+      </section>
+
+      <!-- ══════════════ 场景 6 · 69.68 – 78.888 : 判定框 → 母题聚成勾 ══════════════ -->
+      <section id="scene-6" class="clip scene" data-start="69.68" data-duration="9.208" data-track-index="6">
+        <div class="tex" data-tex="6">
+          <div class="bg-grid" style="background-size: 64px 64px; opacity: 0.4"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow" id="s6-eyebrow">我的判断</div>
+          <div class="s6-judge">
+            <span class="s6-box" id="s6-box">每周都要重复交代？</span>
+            <span class="m" id="s6-m"></span>
+            <span class="s6-yes"
+              ><svg class="ic ic-md ic-brand" id="s6-check"><use href="#i-check-circle" /></svg>做成技能</span
+            >
+          </div>
+          <div class="s6-ask" id="s6-ask">你最常跟 AI 重复的那句话，是什么？</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const V = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+      const C500 = V("--brand-500"), C600 = V("--brand-600"), CLINE = V("--line-strong"), CWEAK = V("--ink-4");
+
+      // 场景全局起点：取音频静音段的中点，画面无缝相接
+      const T2 = 5.09, T3 = 18.15, T4 = 30.41, T5 = 55.47, T6 = 69.68;
+
+      /* ---------- 背景 L1 网格漂移 + L3 呼吸光（全片背景，永不静止） ---------- */
+      tl.fromTo("#bg-grid", { x: 0, y: 0 }, { x: -192, y: -192, duration: 78.888, ease: "none" }, 0);
+      tl.fromTo("#bg-glow", { scale: 1, opacity: 0.06 }, { scale: 1.14, opacity: 0.09, duration: 10, ease: "sine.inOut", yoyo: true, repeat: 6 }, 0);
+
+      /* ---------- 场景 1 · 0.00 – 5.09 ---------- */
+      tl.fromTo("#s1-eyebrow", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "expo.out" }, 0.05);
+      tl.fromTo("[data-s1row]", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.06, ease: "expo.out" }, 0.35);
+      // 计数器跳到 5，再收成一个「?」——呼应「多少遍了」
+      tl.set("#s1-num", { textContent: "1" }, 1.55);
+      ["2", "3", "4", "5"].forEach((v, i) => tl.set("#s1-num", { textContent: v }, 1.67 + i * 0.12));
+      tl.fromTo("#s1-num", { scale: 1.35, color: C500 }, { scale: 1, color: C600, duration: 0.4, ease: "back.out(1.4)" }, 2.18);
+      tl.to("#s1-num", { scale: 0.7, opacity: 0, duration: 0.18, ease: "power2.in" }, 2.58);
+      tl.set("#s1-num", { textContent: "?", scale: 1.2, opacity: 1, color: C600 }, 2.76);
+      tl.to("#s1-num", { scale: 1, duration: 0.4, ease: "back.out(1.4)" }, 2.80);
+      tl.fromTo("#s1-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "expo.out" }, 3.2);
+
+      /* ---------- 场景 2 · 5.09 – 18.15 : 四次一样的输入，全部变灰 ---------- */
+      tl.fromTo("#s2-eyebrow", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "expo.out" }, T2 + 0.15);
+      // 快快慢：前三次 0.18s 连着出，第四次等 0.5s 再出，然后停住让观众消化
+      [0, 1, 2].forEach((i) => {
+        tl.fromTo(`[data-s2row]:nth-of-type(${i + 1})`, { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "expo.out" }, T2 + 4.2 + i * 0.18);
+      });
+      tl.fromTo("[data-s2row]:nth-of-type(4)", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "expo.out" }, T2 + 5.2);
+      // 整块降权 + 红线划过
+      tl.to("[data-s2row]", { opacity: 0.4, duration: 0.4, ease: "power2.inOut" }, T2 + 8.6);
+      tl.fromTo("#s2-strike", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power2.inOut" }, T2 + 8.6);
+      tl.fromTo("#s2-turn", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "expo.out" }, T2 + 9.4);
+
+      /* ---------- 场景 3 · 18.15 – 30.41 : 时间轴（技能那条伸出画面） ---------- */
+      tl.fromTo("#s3-eyebrow", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "expo.out" }, T3 + 0.15);
+      tl.fromTo("[data-tlrow]", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.16, ease: "expo.out" }, T3 + 1.7);
+      // 提示词：只占一小段，然后停住
+      tl.fromTo('.tl-row.a [data-tlfill]', { scaleX: 0 }, { scaleX: 0.34, duration: 0.7, ease: "expo.out" }, T3 + 2.5);
+      // 技能：一直画到画面外（出画 = 无限延续）
+      tl.fromTo('.tl-row.b [data-tlfill]', { scaleX: 0 }, { scaleX: 1.42, duration: 1.6, ease: "power2.out" }, T3 + 3.2);
+      tl.fromTo("#s3-n1", { x: -18, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, T3 + 8.0);
+      tl.fromTo("#s3-n2", { x: -18, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, T3 + 9.9);
+      // 焦点推近（摄影语言，不是元素高亮）
+      tl.set(".card", { scale: 1 }, T3);
+      tl.to(".card", { scale: 1.015, duration: 0.6, ease: "power2.out" }, T3 + 2.3);
+      tl.to(".card", { scale: 1, duration: 0.5, ease: "power2.inOut" }, T3 + 10.6);
+
+      /* ---------- 场景 4 · 30.41 – 55.47 : 三点差别，焦点自己走 ---------- */
+      const rows4 = gsap.utils.toArray("[data-s4row]");
+      const acts4 = [2.29, 10.73, 18.41];
+      const cons4 = [3.60, 12.05, 19.80];
+      tl.set("[data-s4row]", { opacity: 0 }, 0);
+      rows4.forEach((row, i) => {
+        tl.to(row, { opacity: 1, duration: 0.3, ease: "expo.out" }, T4 + acts4[i]);
+        if (i > 0) tl.to(rows4.slice(0, i), { opacity: 0.42, duration: 0.3, ease: "expo.out" }, T4 + acts4[i]);
+        tl.fromTo(row.querySelector("[data-s4ind]"), { scaleY: 0 }, { scaleY: 1, duration: 0.4, ease: "expo.out" }, T4 + acts4[i]);
+        tl.fromTo(row.querySelectorAll(".s4-line"), { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, stagger: 0.12, ease: "expo.out" }, T4 + cons4[i]);
+        tl.fromTo(row.querySelectorAll(".ic"), { strokeDashoffset: -240, opacity: 0 }, { strokeDashoffset: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, T4 + cons4[i] + 0.1);
+      });
+      tl.set(".card", { scale: 1 }, T4);
+
+      /* ---------- 场景 5 · 55.47 – 69.68 : 前后流程图 ---------- */
+      tl.fromTo("#s5-eyebrow", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "expo.out" }, T5 + 0.15);
+      // 上面那条（绕弯的）先长完
+      tl.fromTo('[data-s5lane]:nth-of-type(1) .s5-node', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, stagger: 0.14, ease: "expo.out" }, T5 + 4.6);
+      tl.fromTo('[data-s5lane]:nth-of-type(1) [data-s5link]', { scaleX: 0 }, { scaleX: 1, duration: 0.4, stagger: 0.18, ease: "expo.out" }, T5 + 4.9);
+      // 下面那条（直插的）一笔画到底
+      tl.fromTo('[data-s5lane]:nth-of-type(2) .s5-node', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, stagger: 0.12, ease: "expo.out" }, T5 + 9.9);
+      tl.fromTo('[data-s5lane]:nth-of-type(2) [data-s5link]', { scaleX: 0 }, { scaleX: 1, duration: 0.6, stagger: 0.22, ease: "power2.out" }, T5 + 10.2);
+      tl.fromTo("#s5-note", { x: -18, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "expo.out" }, T5 + 11.4);
+      tl.set(".card", { scale: 1 }, T5);
+      tl.to(".card", { scale: 1.015, duration: 0.6, ease: "power2.out" }, T5 + 10.6);
+      tl.to(".card", { scale: 1, duration: 0.5, ease: "power2.inOut" }, T5 + 13.4);
+
+      /* ---------- 场景 6 · 69.68 – 78.888 : 判定 → 母题聚成勾 ---------- */
+      tl.fromTo("#s6-eyebrow", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "expo.out" }, T6 + 0.15);
+      tl.fromTo("#s6-box", { yPercent: 40, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.6, ease: "expo.out" }, T6 + 0.5);
+      // 母题：从「一个任务」聚成勾
+      tl.fromTo("#s6-m", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.4)" }, T6 + 2.4);
+      tl.to("#s6-m", { scale: 0.3, opacity: 0, duration: 0.3, ease: "power2.in" }, T6 + 5.4);
+      tl.fromTo("#s6-check", { strokeDashoffset: -240, opacity: 0, scale: 0.7 }, { strokeDashoffset: 0, opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.4)" }, T6 + 5.5);
+      tl.fromTo("#s6-ask", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "expo.out" }, T6 + 6.1);
+      // 结尾：所有内容轻微收拢，留 1.5s 静止（有「结束感」，不是卡住）
+      tl.set(".card", { scale: 1 }, T6);
+      tl.to("#s6-box", { scale: 0.98, duration: 0.5, ease: "power2.inOut" }, T6 + 7.2);
+      tl.to(".subs", { opacity: 0.9, duration: 0.6, ease: "power2.inOut" }, T6 + 7.2);
+
+      /* ---------- 字幕时间轴：由 build-subs.mjs 从 captions.json 生成 ---------- */
+      // CAPS:START
+      const CAPS = [
+        [0, 0.00, 2.56],
+        [1, 2.76, 5.04],
+        [2, 5.24, 7.44],
+        [3, 7.64, 9.14],
+        [4, 9.34, 11.08],
+        [5, 11.28, 13.58],
+        [6, 13.78, 15.58],
+        [7, 15.78, 18.18],
+        [8, 18.38, 19.74],
+        [9, 19.94, 23.06],
+        [10, 23.26, 26.06],
+        [11, 26.26, 27.52],
+        [12, 27.72, 30.36],
+        [13, 30.56, 32.50],
+        [14, 32.70, 34.12],
+        [15, 34.32, 37.54],
+        [16, 37.74, 40.94],
+        [17, 41.14, 42.56],
+        [18, 42.76, 45.66],
+        [19, 45.86, 48.62],
+        [20, 48.82, 50.32],
+        [21, 50.52, 52.34],
+        [22, 52.54, 55.50],
+        [23, 55.70, 56.66],
+        [24, 56.86, 58.18],
+        [25, 58.38, 60.08],
+        [26, 60.28, 62.44],
+        [27, 62.64, 65.24],
+        [28, 65.44, 67.80],
+        [29, 68.00, 69.68],
+        [30, 69.88, 71.72],
+        [31, 71.92, 75.54],
+        [32, 75.74, null],
+      ];
+      // CAPS:END
+      CAPS.forEach(([i, s, e]) => {
+        tl.fromTo(`[data-sub="${i}"]`, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "expo.out" }, s);
+        if (e !== null) tl.to(`[data-sub="${i}"]`, { opacity: 0, duration: 0.16, ease: "power2.in" }, e);
+      });
+
+      window.__timelines["wb-ch05-01"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

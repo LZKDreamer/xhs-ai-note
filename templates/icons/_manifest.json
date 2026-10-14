@@ -1,0 +1,125 @@
+{
+  "version": "1.57.0",
+  "icons": [
+    {
+      "name": "message-circle",
+      "bytes": 431,
+      "cached": false
+    },
+    {
+      "name": "infinity",
+      "bytes": 362,
+      "cached": false
+    },
+    {
+      "name": "clock",
+      "bytes": 346,
+      "cached": false
+    },
+    {
+      "name": "x-circle",
+      "bytes": 371,
+      "cached": false
+    },
+    {
+      "name": "folder",
+      "bytes": 418,
+      "cached": false
+    },
+    {
+      "name": "type",
+      "bytes": 384,
+      "cached": false
+    },
+    {
+      "name": "layers",
+      "bytes": 586,
+      "cached": false
+    },
+    {
+      "name": "file-text",
+      "bytes": 523,
+      "cached": false
+    },
+    {
+      "name": "terminal",
+      "bytes": 339,
+      "cached": false
+    },
+    {
+      "name": "layout-template",
+      "bytes": 450,
+      "cached": false
+    },
+    {
+      "name": "image",
+      "bytes": 433,
+      "cached": false
+    },
+    {
+      "name": "user",
+      "bytes": 373,
+      "cached": false
+    },
+    {
+      "name": "bot",
+      "bytes": 453,
+      "cached": false
+    },
+    {
+      "name": "mouse-pointer-click",
+      "bytes": 552,
+      "cached": false
+    },
+    {
+      "name": "zap",
+      "bytes": 463,
+      "cached": false
+    },
+    {
+      "name": "repeat",
+      "bytes": 423,
+      "cached": false
+    },
+    {
+      "name": "refresh-cw",
+      "bytes": 472,
+      "cached": false
+    },
+    {
+      "name": "check-circle",
+      "bytes": 367,
+      "cached": false
+    },
+    {
+      "name": "copy",
+      "bytes": 413,
+      "cached": false
+    },
+    {
+      "name": "git-branch",
+      "bytes": 393,
+      "cached": false
+    },
+    {
+      "name": "check",
+      "bytes": 314,
+      "cached": false
+    },
+    {
+      "name": "sparkles",
+      "bytes": 645,
+      "cached": false
+    },
+    {
+      "name": "hard-drive",
+      "bytes": 539,
+      "cached": false
+    },
+    {
+      "name": "plus",
+      "bytes": 330,
+      "cached": false
+    }
+  ]
+}

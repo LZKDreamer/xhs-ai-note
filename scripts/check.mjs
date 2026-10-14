@@ -78,7 +78,11 @@ await step("压力测试（溢出兜底生效 + 无残留溢出）", async () =>
 });
 
 // ---------- 5. 成品笔记 ----------
-await step("成品笔记（output/ 下逐条渲染）", async () => {
+// ⚠ 自动缩放 = 失败，不是提示。
+//   自动适配只是兜底：一页要缩到 81% 才放得下，说明内容本身就超了。
+//   SKILL.md 早就写了「出现『建议精简文字』要回头改内容」，但那是靠自觉——
+//   规则写了而脚本不拦，等于没写。这里把它变成硬失败。
+await step("成品笔记（output/ 下逐条渲染 · 不得自动缩放）", async () => {
   const outDir = path.join(ROOT, "output");
   if (!existsSync(outDir)) {
     process.stdout.write("  （output/ 下暂无笔记，跳过）\n");
@@ -103,13 +107,17 @@ await step("成品笔记（output/ 下逐条渲染）", async () => {
     ]);
     const scaled = /自动适配：(\d+) 张做了缩放/.exec(r.out);
     const sizeOk = /均为 1080×1440/.test(r.out);
-    const ok = r.code === 0 && sizeOk;
+    // 缩放即失败：内容超了可用高度，必须改内容或换密度变体
+    const noScale = !scaled;
+    const ok = r.code === 0 && sizeOk && noScale;
     if (!ok) allOk = false;
     process.stdout.write(
       `  ${ok ? "✓" : "✗"} ${n.name}` +
         `  尺寸${sizeOk ? "正确" : "异常"}` +
-        `${scaled ? `，${scaled[1]} 张被缩放` : "，无需缩放"}` +
-        `${r.code === 0 ? "" : "，有残留溢出"}\n`
+        (scaled
+          ? `，✗ ${scaled[1]} 张被缩放 → 内容超了，改内容或换 sm-dense 变体`
+          : "，✓ 无需缩放") +
+        `${r.code === 0 ? "" : "，✗ 有残留溢出"}\n`
     );
     if (!ok) process.stdout.write(r.out + "\n");
   }

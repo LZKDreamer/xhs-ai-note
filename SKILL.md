@@ -1,23 +1,38 @@
 ---
 name: xhs-ai-note
 description: >-
-  把一篇 AI 相关长文（网址 / Markdown 文件 / 粘贴的文字）转换成一条可直接发布的小红书 3:4 图文笔记，
-  产出标题、正文、分页稿和 1080×1440 的成品图片。
-  用于用户说「把这篇文章做成小红书图文」「把这个链接做成笔记」「复刻这个风格做成小红书」时。
-  只做小红书图文笔记，不做视频、不做公众号排版。
+  把一篇 AI 相关长文（网址 / Markdown 文件 / 粘贴的文字）做成小红书内容，有两种产出模式：
+  ① 图文笔记 —— 标题、正文、分页稿 + 1080×1440 成品图片；
+  ② AI 知识讲解视频 —— 逐字口播稿、TTS 配音、逐词字幕 + 1080×1920 成品 MP4。
+  用于用户说「把这篇文章做成小红书图文」「把这个链接做成笔记」「把这篇文章做成讲解视频」时。
+  不做公众号排版。
 ---
 
-# 一篇文章 → 一条小红书图文笔记
+# 一篇文章 → 小红书内容（图文笔记 / AI 知识讲解视频）
 
 ## 先读
 
 工作目录：`D:\AI\repository\ai-study`
 
 1. `PROJECT.md` — 项目总纲、边界规则、目录结构
-2. `references/标题与封面规范.md` — **标题公式与封面结构，出标题和做封面前必读**
-3. `references/设计系统规范.md` — **配色/字体/间距/页型组件，写 HTML 前必读**
-4. 本文件 — 执行流程
-5. `templates/components.css` — 页型组件的实际实现
+2. `references/账号定位规范.md` — **账号名、简介、主页三件套、人设边界；写任何面向读者的文字前必读**
+3. `references/标题与封面规范.md` — **标题公式与封面结构，出标题和做封面前必读**
+4. `references/人味写作规范.md` — **所有面向读者的文字都要过这一关：视角、去 AI 味、禁词**
+5. `references/设计系统规范.md` — **配色/字体/间距/页型组件，写 HTML 前必读**
+6. `references/口播稿规范.md` — **视频模式必读：口播稿结构、钩子、术语念法、拆条规则**
+7. `references/动效规范.md` — **视频模式必读：动效令牌、五个原语、声画同步、版面与工程契约**
+8. 本文件 — 执行流程
+9. `templates/components.css` — 页型组件的实际实现
+
+## 模式判断（开工前第一件事）
+
+| 用户说 | 走哪个模式 | 看哪一节 |
+|---|---|---|
+| 「做成小红书图文」「做成笔记」「复刻这个风格」 | **图文** | 下面「流程」第 0–5 步 |
+| 「做成讲解视频」「做成视频」「配音 + 字幕」 | **视频** | 下面「视频模式」+ `references/口播稿规范.md` |
+| 没说 / 两个都要 | **先问一句**，不要自行决定 | |
+
+**两个模式各做各的**：不要求页序一致、不要求条数一致、不共用分镜。共用的只有源材料存档、设计令牌和标题公式。
 
 ## 硬约束（违反即为不合格）
 
@@ -31,6 +46,13 @@ description: >-
 | 6 | **不主动读用户没给的目录或文件。** 需要额外材料时先问。 |
 | 7 | **颜色只用令牌**。不写 `#999`、`rgba(0,0,0,.4)` 这类临时值；改完颜色必须跑 `node scripts/contrast.mjs` 并 0 失败。 |
 | 8 | **不要用 PowerShell 的 `Get-Content -Raw` / `Set-Content` 修改含中文的文件**，会破坏编码。用文件编辑工具。 |
+| 9 | **视频模式下，口播稿未经用户确认绝不进入 TTS。** 口播稿定稿 = 时长、分镜、字幕文字同时定稿。 |
+| 10 | **不做「上集/下集」。** 每条视频必须能独立看懂；系列感靠选题角度体现。 |
+| 11 | **英文术语按 `references/口播稿规范.md` 的念法表处理**（Skill→技能、Prompt→提示词、Agent→智能体）。 |
+| 12 | **不出现「解读视角」**：正文与口播稿里禁止「原文里」「文章说」「作者提到」「这一章」。读者不知道原始文章存在。详见 `references/人味写作规范.md` §一。 |
+| 13 | **不为了具体而编造时间 / 数量 / 场景**（「上周」「我测了 100 个」）。具体化只有两个合法来源：**真发生过**，或**普遍成立**。 |
+| 14 | **`check` 的 `ℹ info` 不等于可以放过。** `canvas_overflow` / `container_overflow` / `content_overlap` / `negative_z_index` 进了 info 也必须处理；只有明确判定为故意行为（遮罩溢出、出画延续条）才保留，并加标记。详见 `references/动效规范.md` §七。 |
+| 15 | **图示最右端元素必须落在安全区内**，不允许末端出画。 |
 
 ## 流程
 
@@ -89,6 +111,12 @@ description: >-
 - ❌ **HTML 里不写内联 `style`**（守卫脚本会拦），样式只写进 CSS
 - ✅ 圆角、边框、卡片、橙色强调一致使用
 - ✅ **按条目数主动选变体**，不要指望自动适配兜底
+- ✅ **图标只做图示里的节点标识**（`<svg class="ic ic-md ic-brand"><use href="#i-folder"/></svg>`）：
+  ❌ 不做标题前缀、❌ 不做列表符号、❌ 一屏 ≤ 6 个。答不上「它在表达什么关系」就拿掉
+- ✅ 加图标前后都要跑 `node scripts/build-sprite.mjs "<note.html>"` 注入 sprite
+- ✅ 用**视觉母题**贯穿全篇，首尾呼应：**◯ `message-circle` = 一次对话（临时）／▣ `folder` = 存下来的做法（留存）**
+  （`<span class="motif">` 系列 + `.ic-xl`/`.ic-2xl`；尺度与状态类见 `references/设计系统规范.md` §6.2。⚠️ 旧的 `.m` 橙方块已被替代，不要再用）
+- ✅ 需要「说明书」气质时用**图纸感标注**：`<div class="note"><span class="badge">1</span>说明</div>`
 
 **变体选择（写 HTML 前先定）**：
 
@@ -182,10 +210,11 @@ node scripts/render.mjs "output\<目录>\note.html" "output\<目录>\images"
 应该回头改内容或换变体，而不是接受这个缩放。**
 
 **渲染后必须检查**：
-1. 报告里是否出现「建议精简文字 / 建议拆页」→ 是则改内容或换变体，重新渲染
+1. ⚠️ **报告里出现「N 张做了缩放」= 直接失败**，不是提示。`check.mjs` 现在会因此返回非 0。
+   必须回头精简内容或换 `sm-dense` 变体，**不许接受缩放**
 2. 图片不是 1080×1440 → 检查 CSS 路径（多半是路径写错，用 `net-probe.mjs` 确认）
-3. **用 read_image 亲眼看封面和至少 2 张内页**，确认没有错字、断行难看、留白失衡
-4. 全部改完跑一次总检查：`node scripts/check.mjs`（令牌守卫 + 配色审计 + 组件总览 + 压力测试 + 成品笔记）
+3. **用 read_image 亲眼看封面和至少 2 张内页**，确认没有错字、断行难看、留白失衡、**图标没变形/没错位**
+4. 全部改完跑一次总检查：`node scripts/check.mjs`（令牌守卫 + 配色审计 + 组件总览 + 压力测试 + 成品笔记不得缩放）
 
 ### 第 5 步：交付
 
@@ -204,3 +233,111 @@ node scripts/render.mjs "output\<目录>\note.html" "output\<目录>\images"
 | 调试端口起不来 | 同上，改为手动截图 |
 | 中文字体没生效（标题变成宋体/雅黑） | 检查 `templates/base.css` 里的 `@font-face` 路径，以及 `templates/components.css` 第一行的 `@import` 是否在文件最顶部 |
 | 抓不到 SPA 站点正文 | 让用户提供正文或目录，不要编造 |
+
+---
+
+## 视频模式（AI 知识讲解视频）
+
+> **完整规则见 `references/口播稿规范.md`。** 本节只讲执行顺序、命令和踩过的坑。
+> 铁律：**口播稿定稿前，不出音频、不做画面。**
+
+### 规格
+
+| 项 | 值 |
+|---|---|
+| 画布 | 1080 × 1920（9:16），30fps |
+| 时长 | **由口播稿决定**；默认 60–75s，硬上限 90s |
+| 音频 | 网站 TTS（晓梦 · 1.20x · +25Hz），**无 BGM、无关注引导** |
+| 字幕 | faster-whisper 出时间轴 + 口播稿文字，**常驻底部** |
+| 渲染 | HyperFrames，本地 Chrome + 本地 ffmpeg，**不用云渲染** |
+
+### 第 V0 步：取原文 + 归档
+
+同图文模式第 0 步。原文存 `sources/<来源>-<编号>-<短标题>/article.md`，配图存同目录 `media/`。
+
+### 第 V1 步：拆条 → 用户确认
+
+先列「独立知识点清单」，再按 `口播稿规范.md` §十 判断拆几条。**产出就几行字**，先给用户看一眼。
+禁止按字数平均切，禁止上集下集，禁止把「安装/点击/导入」这类操作流程做成视频。
+
+### 第 V2 步：写逐字口播稿 → 用户确认（主闸门）
+
+按五段式结构写，每段前标 `【场景 N · 约 Xs · 画面：页型 · 用图：…】`。
+产出到 `studio/videos/<来源>-<编号>-<短标题>-<nn>/口播稿.md`，同时给封面标题 1 主选 + 3 备选。
+**停下来等确认，不要往下走。**
+
+### 第 V3 步：出音频
+
+```powershell
+cd D:\AI\repository\ai-study
+node scripts/tts.mjs "studio\videos\<片子>\口播稿.md" "studio\videos\<片子>"
+ffprobe -v error -show_entries format=duration -of csv=p=0 "studio\videos\<片子>\narration.mp3"
+```
+
+脚本内部已经带好了必须的浏览器 UA / Referer / Origin（**缺了就是 403**，实测），
+`pitch` 传数字 25、`speed` 传数字 1.2。它同时产出 `script.json` 供下一步复用。
+
+**出音后必须把实测时长回填到口播稿的核算表。** 估算永远不准——
+第 5 章第 1 条估算 71.5s、实测 78.9s，**差 10%**，多出来的全在引号、冒号、短句停顿和场景气口上。
+超出 60–75s 默认区间时，**先报告用户**再决定删字还是接受。
+
+### 第 V4 步：出字幕（faster-whisper）
+
+```powershell
+python scripts/align.py "studio\videos\<片子>"
+```
+
+一次跑完转写 + 强制对齐，产出：
+
+- `transcript.json` —— whisper 原始词级输出（含置信度，排查用）
+- `captions.json` —— **成品**：场景起止 + 逐句字幕（**文字来自口播稿，时间来自 whisper**）
+
+要点：
+
+- 模型 `D:\software\models\faster-whisper-large-v3`，CPU int8，加载约 22s
+- 转写约 **1.8× 实时**（78.9s 音频 → 141s）
+- 中文常被切成单字，脚本已按句合并
+- ❌ **不要用 `hyperframes transcribe`**：它走 whisper.cpp，要 git+cmake 从源码构建 + 从 HuggingFace 下模型
+
+### 第 V5 步：做 composition 并渲染
+
+**详细契约见 `references/动效规范.md`。** 关键几条：
+
+- 架构：`index.html` 做 root，**每个场景一个 sub-composition 文件**放在 `compositions/`
+- 样式：引 `./design/components.css` —— 这是 `templates/` 的**目录联接**，
+  因为 **HyperFrames 把资源路径钳制在工程根目录内，`../templates/…` 一律不生效**。
+  联接丢失时跑 `node scripts/setup-studio.mjs` 重建
+- 版面：stage `1080×1440` 复用 `.card`，底部 `480` 是字幕带，**字幕不进底部 200px**
+- 时长：每个场景的时长取 `captions.json` 的实测值，**不是估算**
+
+```powershell
+cd D:\AI\repository\ai-study\studio
+$env:TMP='D:\hf-tmp'; $env:TEMP='D:\hf-tmp'   # ⚠ C 盘只剩约 9 GB，帧缓存必须指到 D 盘
+npx hyperframes@0.8.156 check
+npx hyperframes@0.8.156 render --quality high --workers 2 -o renders/out.mp4
+```
+
+- ⚠️ **worker 限 2**（i5-8400 / 6 核 / 可用内存约 5.9 GB，每个 worker 一个 Chrome 约 256 MB）
+- 实测速度：**每 1 秒成片约 3.3 秒渲染**（探路片 150 帧 / 5s → 16.5s）
+- 渲染完抽帧，用 `read_image` 亲眼看封面 + 至少 2 个场景
+
+### 第 V6 步：交付
+
+MP4 + 封面图 + 口播稿 + 字幕文件，然后**停下来等反馈**。
+
+### 环境事实（已实测）
+
+| 项 | 状态 |
+|---|---|
+| HyperFrames | 0.8.156，`npx hyperframes` 直接可跑 |
+| Chrome | **用系统 Chrome**，不需要下载 pinned Chrome |
+| FFmpeg / FFprobe | ✅ 本机已装 |
+| faster-whisper | 1.2.1 + ctranslate2 4.8.1，模型 2.88 GB ✅ |
+| TTS | `tts.wangwangit.com/v1/audio/speech` ✅（必须带浏览器 UA） |
+| 本机 edge-tts | ❌ **403 不可用**（直连与走代理都失败），只能走网站 |
+| whisper-cpp | ❌ 未装 —— 不影响，用 faster-whisper |
+| ⚠️ C 盘余量 | 仅约 9.2 GB，D 盘 401 GB → **渲染临时目录指到 `D:\hf-tmp`** |
+| ⚠️ 机器 | i5-8400 / 6 核 / 可用内存约 5.9 GB → worker 限 2 |
+| 渲染速度（实测） | **每 1 秒成片约 3.3 秒渲染**；78.9s 的片子预估约 4.3 分钟 |
+| GPU | NVIDIA GTX 1060 被自动识别，走 hardware GPU ✅ |
+| 设计系统接入 | `studio/design`、`studio/fonts` 两个**目录联接**指回 `templates/`、`fonts/`；重建 `node scripts/setup-studio.mjs` |

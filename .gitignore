@@ -17,6 +17,27 @@ output/*/images/
 templates/_styleguide-out/
 templates/_fit-out/
 
+# ---------- 视频产物 ----------
+# HyperFrames 工程的依赖（几百 MB，且带平台相关的原生二进制）
+studio/node_modules/
+# HyperFrames 的检查产物与缓存
+studio/.hyperframes/
+# ⚠ 这两个是目录联接（junction），指向 templates/ 与 fonts/，
+#   内容已经在仓库里被跟踪，不忽略会导致 7MB 字体重复入库。
+#   重建：node scripts/setup-studio.mjs
+studio/design
+studio/fonts
+# 视频生产链的中间与成品产物：口播稿（.md）入库，其余全部可重新生成
+studio/**/*.mp3
+studio/**/*.wav
+studio/**/*.mp4
+studio/**/transcript.json
+studio/**/captions.json
+studio/**/script.json
+studio/renders/
+studio/frames/
+output/*/video/
+
 # 防护：任何以 _ 开头、以 -out 结尾的临时输出目录
 *-out/
 

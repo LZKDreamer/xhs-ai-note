@@ -50,6 +50,12 @@
 .p-cover .hero .mark {
   position: relative;
   display: inline-block;
+  /* ⚠ 这一行不能删。
+     ::after 用 z-index:-1 画在文字下面，但 `position: relative` + `z-index: auto`
+     并不建立层叠上下文，所以那块高亮会一路掉到 .card 的不透明背景之后——
+     DOM 里有、画面上完全没有（实测：封面「记不住」的高亮块整块消失）。
+     isolation: isolate 就地建立层叠上下文，是最省的做法。 */
+  isolation: isolate;
 }
 .p-cover .hero .mark::after {
   content: "";
@@ -76,7 +82,9 @@
 .p-cover .duo {
   margin-top: var(--sp-6);
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  /* 不对称：b 侧（技能）更宽。用宽度表达主次，不用多写一个字——
+     对称构图本身就显平。 */
+  grid-template-columns: 0.82fr auto 1.18fr;
   gap: var(--sp-2);
   align-items: start;
   flex: none;
@@ -653,4 +661,53 @@
 }
 .mt-48 {
   margin-top: var(--sp-6);
+}
+
+/* ============================ 页型底纹 ============================
+   从视频的「场景底纹」搬过来：9 张图不再共用同一层网格。
+   底纹一律走**边缘或列间距**，绝不压在文字上——
+   因为 ::after 是后生成的定位元素，会画在内容之上，压在字上就是灾难。
+   ================================================================== */
+
+/* 对比页：中间一条竖虚线，落在两列之间的空隙里（左虚右实的隐喻） */
+.p-compare::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: var(--pad-top);
+  bottom: var(--pad-bottom);
+  width: 4px;
+  /* 用 transform 居中，而不是 margin-left:-2px —— 后者会被令牌守卫判成
+     「不在 8px 栅格上的魔法数字间距」。视觉结果完全一致。 */
+  transform: translateX(-50%);
+  background: repeating-linear-gradient(180deg, var(--line-strong) 0 18px, transparent 18px 36px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 步骤页：右侧一条轨迹线（内容左右边距 88px，44px 处在留白里） */
+.p-steps::after {
+  content: "";
+  position: absolute;
+  right: calc(var(--pad-x) / 2);
+  top: var(--pad-top);
+  bottom: var(--pad-bottom);
+  width: 3px;
+  border-radius: 2px;
+  background: var(--line);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* 清单页：右侧刻度尺，每 64px 一格 */
+.p-list::after {
+  content: "";
+  position: absolute;
+  right: calc(var(--pad-x) / 2);
+  top: var(--pad-top);
+  bottom: var(--pad-bottom);
+  width: 22px;
+  background: repeating-linear-gradient(180deg, var(--line-strong) 0 3px, transparent 3px 64px);
+  opacity: 0.6;
+  pointer-events: none;
 }

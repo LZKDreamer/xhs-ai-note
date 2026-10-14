@@ -128,3 +128,209 @@ body {
 .c-foot {
   display: none;
 }
+
+/* ==========================================================================
+   图标（Lucide，ISC；授权声明见 templates/icons/LICENSES.md）
+   定义与引用方式见 scripts/build-sprite.mjs。
+   stroke 相关属性都是可继承的，写在外层 <svg> 上会传进 <use> 的影子内容。
+   ========================================================================== */
+.ic {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+  flex: none;
+}
+/* 24 视口换算，让视觉描边固定在 3px（和 design system 的线条同粗） */
+.ic-lg { width: 64px; height: 64px; stroke-width: 1.15; }
+.ic-md { width: 48px; height: 48px; stroke-width: 1.5; }
+.ic-sm { width: 34px; height: 34px; stroke-width: 2.1; }
+.ic-brand { color: var(--brand-600); }
+.ic-ink { color: var(--ink); }
+.ic-weak { color: var(--ink-4); }
+
+/* ==========================================================================
+   图纸感标注：编号圆点 + 小字（让画面从「卡片」变成「说明书」）
+   ========================================================================== */
+.note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--fs-8);
+  line-height: 1.2;
+  color: var(--ink-3);
+  flex: none;
+}
+.note .badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--brand-500);
+  color: var(--on-brand);
+  font-size: 20px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+/* ==========================================================================
+   视觉母题：一个橙色小方块 = 「一次对话 / 一个任务」
+   全篇反复出现、逐页变形，让 9 张图看起来是**一件作品**而不是 9 张卡。
+   ========================================================================== */
+.m {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--brand-500);
+  display: block;
+  flex: none;
+}
+.m.ghost { background: transparent; border: 3px dashed var(--line-strong); }
+.m.dim { background: var(--line-strong); }
+.m.tall { height: 48px; border-radius: 12px; }
+.m.wide { width: 60px; }
+
+/* ==========================================================================
+   上面三样的排布容器
+   只有「图标 / 方块 + 一行小字」需要容器；其余都是单点元素。
+   容器只负责 flex 与间距，不承担任何颜色，避免和守卫的令牌规则打架。
+   ========================================================================== */
+
+/* 图标 + 文字同一行。用于图示里的节点标识（文件夹名、两列标题…），
+   不做标题前缀、不做列表符号 */
+.ic-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* 视觉母题的一行：方块 + 说明小字 */
+.motif {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+}
+
+/* 图纸感标注成组出现时的一行：编号圆点从左到右对应图里的节点。
+   用两列网格而不是 flex 横排——两列页型（如 .p-compare）里，
+   ① 才会真的落在左列标题下面、② 落在右列标题下面，像图纸的图例。 */
+.notes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2) var(--sp-4);
+  flex: none;
+}
+
+/* 图标 sprite 的定义区：0×0，不参与布局。
+   build-sprite.mjs 注入的每个 <symbol> 都挂在这里。 */
+.sprite-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   视觉母题（方案 B）
+   把 message-circle 与 folder 从「标题旁的小图标」升格为贯穿全篇的主角。
+   ◯ = 一次对话，▣ = 存下来的做法。
+   判据：① 单独拿出来能猜出意思 ② 状态变化本身就是叙事线 ③ 不增加新图形资产
+   ========================================================================== */
+
+/* 母题尺度。Lucide 是按 24px 网格设计的，放大到 112px 后必须**按比例调小**
+   stroke-width（3 × 24 ÷ 112 ≈ 0.64），视觉粗细才仍然是 3px，和正文线条同粗。
+   不调的话图标会变成一坨粗线。 */
+.ic-xl { width: 112px; height: 112px; stroke-width: 0.64; }
+.ic-2xl { width: 152px; height: 152px; stroke-width: 0.47; }
+
+/* 母题一行（横向）：◯ ──▶ ▣ */
+.motif-flow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  flex: none;
+}
+
+/* 母题一组（纵向）：图标 + 下方小字 */
+.motif-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+}
+
+.motif-cap {
+  font-size: var(--fs-8);
+  font-weight: 700;
+  color: var(--ink-3);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* 自绘箭头：不引入新图标，线条规格和全篇一致 */
+.motif-arrow {
+  position: relative;
+  width: 56px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--brand-500);
+  flex: none;
+}
+.motif-arrow::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  margin-top: -7.5px;
+  border-top: 5px solid var(--brand-500);
+  border-right: 5px solid var(--brand-500);
+  transform: rotate(45deg);
+}
+
+/* 状态修饰 */
+.motif-muted { color: var(--ink-4); opacity: 0.5; }  /* 失效：说了，但什么都没留下 */
+.motif-boxed {                                        /* 临时：虚线框，用完就散 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3);
+  border: 3px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+.motif-solid {                                        /* 留存：实线框 + 浅橙底 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3);
+  border: 3px solid var(--brand-500);
+  border-radius: var(--radius-sm);
+  background: var(--brand-50);
+}
+
+/* 母题对齐修饰（必须写在 .motif-col / .motif-cap 之后才生效）。
+   .card 是 column flex 且默认 stretch：直接放进去的竖排母题会被拉满宽度、
+   里面的小字会被拉到两边。贴左 / 贴右由这两个类显式指定。 */
+.motif-left { align-items: flex-start; }
+.motif-right { align-self: flex-end; }
+.motif-cap-left { text-align: left; }
+
+/* 母题图标占位：同一组里两个母题大小不同时（例如收尾页淡出的 ◯ 与留下的 ▣），
+   图标先占满一个 .ic-xl 宽度的槽，右侧小字才会上下对齐。
+   图标本身贴左，不会离开页面的左边距。 */
+.motif-slot {
+  width: 112px;
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+/* 把母题沉到版心下半部分。页面本身靠末块的 margin-top:auto 沉底时，
+   两个 auto 会平分余量——比在中间留下一整块白要好。 */
+.mt-auto { margin-top: auto; }
