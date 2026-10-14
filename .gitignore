@@ -14,6 +14,8 @@
 
 # ---------- 出图产物 ----------
 output/*/images/
+# 裁切后的截图与接触印相（由 shots.json + 原文生成，可重跑 scripts/build-shots.py）
+output/*/assets/
 templates/_styleguide-out/
 templates/_fit-out/
 
