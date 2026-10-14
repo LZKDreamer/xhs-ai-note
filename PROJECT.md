@@ -98,6 +98,7 @@ D:\AI\repository\ai-study\
 │   ├── setup-studio.mjs        ← 重建 studio/design 与 studio/fonts 两个目录联接
 │   ├── fetch-icons.mjs         ← 按清单拉取 Lucide 图标到 templates/icons/
 │   ├── build-sprite.mjs        ← 把图标生成内联 sprite，注入任意 HTML 的标记区
+│   ├── build-shots.py          ← 图文：按 shots.json 裁切原文截图 + 注入图上标注 + 接触印相
 │   ├── build-subs.mjs          ← 视频：从 captions.json 生成字幕层与时间轴数组
 │   ├── tts.mjs                 ← 视频：口播稿.md → script.json + narration.mp3
 │   └── align.py                ← 视频：faster-whisper 转写 + 对齐 + 长句自动拆条 → captions.json
@@ -121,7 +122,9 @@ D:\AI\repository\ai-study\
 └── output/                     ← 成品，一条笔记一个文件夹
     └── <来源>-<编号>-<短标题>\
          ├── 笔记.md            ← 标题、正文、分页稿（可直接复制发布）
-         ├── note.html          ← 出图源文件
+         ├── shots.json         ← ★ 入库：原文截图的裁切矩形 + 图上标注（唯一真源）
+         ├── note.html          ← 出图源文件（04–07 截图页由 build-shots.py 注入）
+         ├── assets\            ← 裁好的截图与接触印相（忽略，可重跑 build-shots.py）
          ├── images\            ← 成品 PNG，01.png … 09.png（忽略）
          └── video\             ← 成品 MP4 + 视频封面（忽略）
 ```
@@ -223,6 +226,7 @@ git config --local https.proxy http://127.0.0.1:10808
 | 产出 | 来源 | 状态 |
 |---|---|---|
 | `output/wb-ch05-什么是Skill/` | WorkBuddy 蓝皮书 第 5 章 | 图文：文案 + 9 张图已产出，待用户确认 |
+| `output/x-01-开源AI内容系统/` | 用户从 X 下载的文章（作者猫哥，开源项目 `ai-content`） | 图文：文案 + 9 张图已产出，**首次使用原文截图（4 张，已裁切 + 图上标注）** |
 | `studio/videos/wb-ch05-01-prompt-vs-skill/` | 同上 | 视频第 1 条：口播稿 → 音频 78.89s → 22 句词级字幕 → **成片已渲染** |
 | `output/wb-ch05-什么是Skill/video/01-提示词和技能到底差在哪.mp4` | 同上 | **成品视频**：1080×1920 · 30fps · 78.9s · 5.58 MB |
 | `studio/index.html` | — | 视频 composition：root + 6 个场景 + 全局时间轴 + 口播音轨 |
@@ -253,20 +257,17 @@ git config --local https.proxy http://127.0.0.1:10808
 
 ### 下一步
 
-1. **配图链路（当前最大空洞，优先）**——文章配图 → 插图。**整条链路从未跑过**：
-   已确认的原文无图、`sources/` 无 `media/`、`note.html` 无 `<img>`。
-   现状：9 张图全部是纯矢量排版（CSS + 图标 + 字体），没有任何真实截图。
-   待办：① 拿到带图素材 ② 出配图版式方案（画框 / 局部裁切 / 编号标注）③ 落地 + 验收脚本
-2. **用户审片**：`output/wb-ch05-什么是Skill/video/01-提示词和技能到底差在哪.mp4`
-3. 视觉迭代：场景 4（三点差别）和场景 5 的版面仍偏空，需要重新配平
-4. 用户确认第 5 章图文的文案与视觉
-5. 视频第 2、3 条（技能最值钱的用法 / 渐进式披露）
-6. 设计系统的已知待改进项见 `references/设计系统规范.md` 第 11 节
+1. **用户审图文**：`output/wb-ch05-什么是Skill/`（9 张）与 `output/x-01-开源AI内容系统/`（9 张）
+2. x-01 拆条第 2、3 条：AI 怎么给选题打分 / 门槛卡控与定时任务（素材已裁好，复用 shots.json）
+3. 视频第 2、3 条（技能最值钱的用法 / 渐进式披露）
+4. 视觉迭代：视频场景 4、5 的版面偏空
+5. 设计系统的已知待改进项见 `references/设计系统规范.md` 第 11 节
 
 ### 已知未解决
 
 | 问题 | 状态 |
 |---|---|
-| **文章配图 → 插图** | 能力未建，见「下一步」第 1 条 |
 | 豆包工作蓝皮书抓取 | ❌ 打不开——它是 SPA，需用户提供目录或正文 |
 | X 文章链接抓取 | ⚠️ 未验证，目前只有 WorkBuddy 蓝皮书验证过链接抓取 |
+| 图文页序密度节奏（密-密-疏） | 待排期 |
+| `scripts/lint-text-overlap.mjs`（图上标注压住图上文字就报错） | 未建——第 14 轮踩过两次，目前靠肉眼核对 |

@@ -95,7 +95,6 @@ def build_html(shots):
         marks = s.get("marks", [])
 
         for m in marks:
-            sel = f"#{s['page']}shot .a{m['n']}" if False else f".{sid} .a{m['n']}"
             if "box" in m:
                 x1, y1, x2, y2 = m["box"]
                 css.append(
@@ -109,8 +108,12 @@ def build_html(shots):
 
         overlay = []
         for m in marks:
-            cls = "annot-box" if "box" in m else "annot"
-            overlay.append(f'      <span class="{cls} a{m["n"]}">{m["n"]}</span>')
+            if "box" in m:
+                overlay.append(
+                    f'<span class="annot-box a{m["n"]}"><span class="bub">{m["n"]}</span></span>'
+                )
+            else:
+                overlay.append(f'<span class="annot a{m["n"]}">{m["n"]}</span>')
 
         mark_rows = []
         for m in marks:
@@ -122,18 +125,23 @@ def build_html(shots):
             )
 
 
+        img = f'<img src="./assets/{sid}.png" alt="{s["alt"]}" />'
+        marks_block = '<div class="marks">' + "".join(mark_rows) + "</div>"
+        if s.get("layout") == "split":
+            body = (
+                '<div class="split-body mt-24"><div class="frame">'
+                + img + "".join(overlay)
+                + "</div>" + marks_block + "</div>"
+            )
+        else:
+            body = '<div class="frame mt-24">' + img + "".join(overlay) + "</div>" + marks_block
+
         sections.append(
             f'<section class="card p-shot {sid}">\n'
             '  <div class="flexcol">\n'
             f'    <div class="eyebrow">{s["eyebrow"]}</div>\n'
             f'    <div class="t-title">{s["title"]}</div>\n'
-            '    <div class="frame mt-24">\n'
-            f'      <img src="./assets/{sid}.png" alt="{s["alt"]}" />\n'
-            + "\n".join(overlay) + "\n"
-            '    </div>\n'
-            '    <div class="marks">\n'
-            + "\n".join(mark_rows) + "\n"
-            '    </div>\n'
+            f'    {body}\n'
             '  </div>\n'
             '</section>'
         )
