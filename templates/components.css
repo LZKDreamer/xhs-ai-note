@@ -78,9 +78,9 @@
 }
 
 /* 封面视觉证据：五步链路条（5 个方块 + 箭头）
-   .on = 主标题点到的那几步，用实心橙 + 深字（6.77:1）。
-   ⚠ 高亮的是「标题里的三件事＝这五步里的三步」这层关系，不是装饰——
-     如果高亮和标题对不上，这条链路就退化成装饰，必须拿掉。 */
+   `.lk.on` = 实心橙高亮。**只有高亮能表达一层真实关系时才用**（例如「标题里的三件事＝这五步里的三步」）。
+   本来这一页用 .on 标了 1/2/3/4 里的三步，但换成痛点式标题后标题不再点名那三步，
+   高亮就对不上标题了——**对不上就是装饰，直接不标**，改用下面那句说明承担意义。 */
 .p-cover .chain {
   margin-top: var(--sp-6);
   display: flex;
@@ -555,6 +555,8 @@
 /* ============================ 07 截图 / 代码 ============================ */
 .p-shot .frame {
   margin-top: var(--sp-1);
+  /* 限宽的截图（竖图）靠这行居中；满宽的图不受影响 */
+  margin-inline: auto;
   border-radius: var(--radius);
   border: 3px solid var(--line-strong);
   background: var(--surface);
@@ -641,18 +643,10 @@
 .p-shot .marks .mark {
   margin-top: 0;
 }
-/* 竖构图截图的变体：图在左、标注在右。宽图不用这个。 */
-.p-shot .split-body {
-  margin-top: auto;
-  display: grid;
-  grid-template-columns: 500px 1fr;
-  column-gap: var(--sp-4);
-  align-items: start;
-}
-.p-shot .split-body .frame,
-.p-shot .split-body .marks {
-  margin-top: 0;
-}
+/* ⚠️ 试过又撤掉的方案：竖图用「图在左、标注在右」的两栏（.split-body）。
+   撤掉的原因：图片列要给到 500px 以上才够高，剩下的标注列只剩约 250px，
+   28–34px 的说明文字被挤成一行 5 个字，读不成句；而且两栏高度差会在右下方留一块空洞。
+   现在的做法是 **图居中、按比例限宽，标注在下方通栏** —— 见 shots.json 的 frame_w。 */
 
 /* 代码块 */
 .codebox {

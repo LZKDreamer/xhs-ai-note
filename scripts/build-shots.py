@@ -94,6 +94,9 @@ def build_html(shots):
         sid = s["id"]
         marks = s.get("marks", [])
 
+        if s.get("frame_w"):
+            css.append(f".{sid} .frame {{ width: {int(s['frame_w'])}px; }}")
+
         for m in marks:
             if "box" in m:
                 x1, y1, x2, y2 = m["box"]
@@ -127,14 +130,7 @@ def build_html(shots):
 
         img = f'<img src="./assets/{sid}.png" alt="{s["alt"]}" />'
         marks_block = '<div class="marks">' + "".join(mark_rows) + "</div>"
-        if s.get("layout") == "split":
-            body = (
-                '<div class="split-body mt-24"><div class="frame">'
-                + img + "".join(overlay)
-                + "</div>" + marks_block + "</div>"
-            )
-        else:
-            body = '<div class="frame mt-24">' + img + "".join(overlay) + "</div>" + marks_block
+        body = '<div class="frame mt-24">' + img + "".join(overlay) + "</div>" + marks_block
 
         sections.append(
             f'<section class="card p-shot {sid}">\n'
