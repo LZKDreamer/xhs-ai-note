@@ -158,7 +158,7 @@ def inject(note_html: Path, payload: str):
     head, rest = raw.split(START, 1)
     _, tail = rest.split(END, 1)
     note_html.write_text(
-        f"{head}{START}\n{payload}\n{END}{tail}", encoding="utf-8"
+        f"{head}{START}\n{payload}\n{END}{tail}", encoding="utf-8", newline="\n"
     )
     return True
 
