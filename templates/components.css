@@ -217,6 +217,77 @@
   color: var(--on-ink); /* 深色底上的白字：18.98:1 */
 }
 
+/* ============================ 02 痛点（深色变体 · 可选） ============================
+   当需要更强情绪冲击时使用：深色底 + 白色文字 + 橙色高亮。
+   与默认浅色痛点页互斥，一条笔记只用一种。
+   ================================================================= */
+.p-pain-dark {
+  background: var(--dark-bg) !important;
+  color: var(--dark-text-strong);
+}
+.p-pain-dark::before {
+  opacity: 0.12;
+  background-image: linear-gradient(var(--dark-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dark-line) 1px, transparent 1px);
+}
+.p-pain-dark .lead-q {
+  font-size: var(--fs-3);
+  font-weight: 900;
+  line-height: 1.22;
+  letter-spacing: 0.005em;
+  color: var(--dark-text-strong);
+  flex: none;
+}
+.p-pain-dark .lead-q .hl-num {
+  color: var(--brand-400);
+  font-size: var(--fs-2);
+}
+.p-pain-dark .stack {
+  margin-top: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  flex: none;
+}
+.p-pain-dark .bubble {
+  align-self: flex-start;
+  max-width: 92%;
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: 24px 24px 24px 6px;
+  background: var(--dark-surface);
+  border: 3px solid var(--dark-line);
+  font-size: var(--fs-6);
+  line-height: 1.45;
+  color: var(--dark-text);
+}
+.p-pain-dark .bubble b {
+  color: var(--dark-text-strong);
+  font-weight: 900;
+}
+.p-pain-dark .bubble.on {
+  background: var(--brand-500);
+  border-color: var(--brand-500);
+  color: var(--on-brand);
+}
+.p-pain-dark .bubble.on b {
+  color: var(--on-brand);
+}
+.p-pain-dark .punch {
+  margin-top: auto;
+  padding: var(--sp-5) var(--sp-5);
+  border-radius: var(--radius);
+  background: var(--dark-text-strong);
+  color: var(--dark-bg);
+  font-size: var(--fs-5);
+  font-weight: 900;
+  line-height: 1.36;
+  flex: none;
+}
+.p-pain-dark .punch em {
+  font-style: normal;
+  color: var(--brand-600);
+}
+
 /* ============================ 02 痛点（浅色） ============================ */
 .p-pain {
   background: var(--bg);
@@ -730,6 +801,41 @@
   letter-spacing: 0.08em;
   opacity: 0.85;
   margin-top: var(--sp-2);
+}
+
+/* ============================ 09 金句页（可选） ============================
+   精简版 7 页结构中的独立金句页：整页只放一句核心判断，最大化二次传播力。
+   字占页面 60% 以上，留白多，适合截图转发。
+   ================================================================= */
+.p-quote {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: var(--bg);
+}
+.p-quote .big {
+  font-family: var(--font-display);
+  font-size: 92px;
+  line-height: 1.18;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.p-quote .big em {
+  font-style: normal;
+  color: var(--brand-600);
+}
+.p-quote .small {
+  margin-top: var(--sp-6);
+  font-size: var(--fs-5);
+  font-weight: 700;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.p-quote .meta {
+  margin-top: var(--sp-10);
+  font-size: var(--fs-8);
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
 }
 
 /* ============================ 工具类 ============================ */

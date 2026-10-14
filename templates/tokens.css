@@ -39,6 +39,13 @@
   --line: #ebe3d8; /* 装饰分隔线 */
   --line-strong: #d3c6b4; /* 卡片描边（装饰性，不承担信息） */
 
+  /* 深色主题（痛点页变体） */
+  --dark-bg: #2c2c2a; /* 深色痛点页底色 */
+  --dark-surface: #3a3a38; /* 深色页气泡/卡片 */
+  --dark-line: #555555; /* 深色页边框 */
+  --dark-text: #d0ccc4; /* 深色页次级文字 */
+  --dark-text-strong: #ffffff; /* 深色页强调文字 */
+
   /* 语义 */
   --ok: #15803d;
   --ok-bg: #f0fdf4;

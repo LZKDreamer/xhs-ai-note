@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-subject="ai-content">
+<head>
+<meta charset="UTF-8" />
+<title>2000 个公众号之后，他把找素材这活交给了 AI</title>
+<link rel="stylesheet" href="../../templates/components.css" />
+<style>
+/* ================= 自定义：金句页 ================= */
+.p-quote {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: var(--bg);
+}
+.p-quote .big {
+  font-family: var(--font-display);
+  font-size: 92px;
+  line-height: 1.18;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.p-quote .big em {
+  font-style: normal;
+  color: var(--brand-600);
+}
+.p-quote .small {
+  margin-top: var(--sp-6);
+  font-size: var(--fs-5);
+  font-weight: 700;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.p-quote .meta {
+  margin-top: var(--sp-10);
+  font-size: var(--fs-8);
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+.p-quote .meta a {
+  color: var(--brand-700);
+  text-decoration: none;
+}
+
+/* ================= 自定义：收尾争议页 ================= */
+.p-end .debate {
+  margin-top: auto;
+  padding: var(--sp-5) var(--sp-5);
+  border-radius: var(--radius);
+  background: var(--brand-500);
+  color: var(--on-brand);
+}
+.p-end .debate .q {
+  font-size: var(--fs-5);
+  font-weight: 900;
+  line-height: 1.35;
+}
+.p-end .debate .sub {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-7);
+  opacity: 0.85;
+}
+
+/* ================= 封面数字高亮 ================= */
+.hero-num {
+  color: var(--brand-600);
+  font-size: var(--fs-1);
+  line-height: 1;
+}
+
+/* ================= 步骤页徽章 ================= */
+.badge-star {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: var(--fs-8);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  flex: none;
+}
+
+/* ================= 截图页 eyebrow 放大 ================= */
+.p-shot .eyebrow-lg {
+  font-size: var(--fs-7);
+  font-weight: 700;
+  color: var(--brand-700);
+  letter-spacing: 0.1em;
+  flex: none;
+  margin-bottom: var(--sp-2);
+}
+.p-shot .eyebrow-lg::before {
+  content: "";
+  display: inline-block;
+  width: 44px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--brand-500);
+  margin-right: 12px;
+  vertical-align: middle;
+}
+/* 封面紧凑变体 */
+.p-cover.compact .hero { margin-top: var(--sp-4); }
+.p-cover.compact .sub { margin-top: var(--sp-3); }
+.p-cover.compact .chain { margin-top: var(--sp-5); }
+.p-cover.compact .cover-foot { margin-top: var(--sp-5); }
+
+/* 步骤页头部 */
+.p-steps .header { display: flex; justify-content: space-between; align-items: center; flex: none; }
+.p-steps .title-tight { margin-top: var(--sp-2); }
+.p-steps .steps-tight { margin-top: var(--sp-3); }
+
+/* 截图页紧凑变体 */
+.p-shot.tight .marks { margin-top: var(--sp-3); }
+.p-shot .frame.narrow { width: 480px; margin-inline: auto; }
+
+/* 收尾页紧凑变体 */
+.p-end.compact .claim { font-size: var(--fs-3); line-height: 1.22; }
+.p-end.compact .recap { margin-top: var(--sp-4); }
+.p-end.compact .debate { margin-top: var(--sp-4); }
+</style>
+</head>
+<body>
+
+<!-- ================================================================
+     爆款专家版 v2 — 7 页
+     ================================================================ -->
+
+<!-- ---------- 01 封面 ---------- -->
+<section class="card p-cover compact">
+  <div class="hook">运营过 2000+ 公众号的程序员</div>
+  <div class="hero">
+    <span class="hero-num">2000</span> 个公众号之后，<br />
+    他把<span class="mark">找素材</span>这活<br />
+    交给了 AI
+  </div>
+  <div class="sub">开源项目 ai-content · 五步定时跑</div>
+  <div class="chain">
+    <div class="lk"><div class="n">1</div><div class="lbl">抓素材</div></div>
+    <div class="ar">→</div>
+    <div class="lk"><div class="n">2</div><div class="lbl">挖选题</div></div>
+    <div class="ar">→</div>
+    <div class="lk"><div class="n">3</div><div class="lbl">筛定位</div></div>
+    <div class="ar">→</div>
+    <div class="lk"><div class="n">4</div><div class="lbl">出初稿</div></div>
+    <div class="ar">→</div>
+    <div class="lk"><div class="n">5</div><div class="lbl">定时跑</div></div>
+  </div>
+  <div class="motif-cap mt-24">五步全都能定时跑，不用人盯着</div>
+  <div class="cover-foot">
+    <span class="chip on">真实界面</span>
+    <span class="chip">附部署门槛</span>
+  </div>
+</section>
+
+<!-- ---------- 02 痛点（深色炸裂） ---------- -->
+<section class="card p-pain-dark">
+  <div class="lead-q">
+    你每天有 <span class="hl-num">三分之二</span> 的时间，<br />
+    花在了「找」上
+  </div>
+  <div class="stack">
+    <div class="bubble on"><b>找素材</b> — 打开十几个网站翻收藏夹</div>
+    <div class="bubble"><b>猜选题</b> — 哪个话题值得写？全凭感觉</div>
+    <div class="bubble"><b>重讲定位</b> — 每次都要跟 AI 重新交代一遍</div>
+    <div class="bubble"><b>重提要求</b> — 风格、格式、字数，从头再来</div>
+  </div>
+  <div class="punch">
+    这四件事，每天都在<em>从头来</em>。
+  </div>
+</section>
+
+<!-- ---------- 03 步骤（希望升起） ---------- -->
+<section class="card p-steps">
+  <div class="header">
+    <div class="eyebrow">开源项目 · ai-content</div>
+    <div class="badge-star">GitHub 200+ star</div>
+  </div>
+  <div class="t-title title-tight">五步流水线，<br />打开后台就干完了</div>
+  <div class="steps steps-tight">
+    <div class="step on">
+      <div class="rail"><div class="bub">1</div><div class="line"></div></div>
+      <div class="txt">
+        <div class="h">定时收素材</div>
+        <div class="d">RSS / API / 网页全搞定，来源、链接、时间全记着。</div>
+      </div>
+    </div>
+    <div class="step on">
+      <div class="rail"><div class="bub">2</div><div class="line"></div></div>
+      <div class="txt">
+        <div class="h">AI 挖选题</div>
+        <div class="d">五维评分：内容价值 / 情绪价值 / 全网声量 / 降维科普 / 画像贴合。</div>
+      </div>
+    </div>
+    <div class="step on">
+      <div class="rail"><div class="bub">3</div><div class="line"></div></div>
+      <div class="txt">
+        <div class="h">按定位精准筛</div>
+        <div class="d">同一个热点，按你的定位切角度——定位越准，选题越对。</div>
+      </div>
+    </div>
+    <div class="step on">
+      <div class="rail"><div class="bub">4</div><div class="line"></div></div>
+      <div class="txt">
+        <div class="h">按风格出稿</div>
+        <div class="d">调你配的模型、提示词、模板，Markdown / HTML / 小红书笔记都能出。</div>
+      </div>
+    </div>
+    <div class="step on">
+      <div class="rail"><div class="bub">5</div></div>
+      <div class="txt">
+        <div class="h">定时出稿，门槛卡死</div>
+        <div class="d">可设最低评分、单次最大篇数。低于 90 分的不动笔。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- 04 截图① 工作台 ---------- -->
+<section class="card p-shot tight" id="p04">
+  <div class="flexcol">
+    <div class="eyebrow-lg">ai-content · 工作台</div>
+    <div class="t-title">今天已经自己收了<br />26 条素材</div>
+    <div class="frame mt-24"><img src="./assets/shot-04.png" alt="ai-content 工作台" /></div>
+    <div class="marks">
+      <div class="mark">
+        <div class="pin">1</div>
+        <div class="txt"><b>26 条</b> — 数据是真的在动，不是示意图</div>
+      </div>
+      <div class="mark">
+        <div class="pin">2</div>
+        <div class="txt"><b>风向词</b> — 它连「今天哪个方向值得写」都先算出来了</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- 05 截图② 选题库 ---------- -->
+<section class="card p-shot tight" id="p05">
+  <div class="flexcol">
+    <div class="eyebrow-lg">ai-content · 选题库</div>
+    <div class="t-title">AI 先给每个题打分，<br />不到 90 不让动笔</div>
+    <div class="frame mt-24 narrow"><img src="./assets/shot-06.png" alt="ai-content 选题卡" /></div>
+    <div class="marks">
+      <div class="mark">
+        <div class="pin">1</div>
+        <div class="txt"><b>86 分</b> — 评分是 AI 给的，只用来排优先级</div>
+      </div>
+      <div class="mark">
+        <div class="pin">2</div>
+        <div class="txt"><b>五维雷达</b> — 内容价值 / 情绪价值 / 全网声量 / 降维科普 / 画像贴合</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- 06 金句页（传播） ---------- -->
+<section class="card p-quote">
+  <div class="big">
+    把重复的收集<br />和起稿<em>交出去</em>
+  </div>
+  <div class="small">
+    把判断和表达，<br />留给自己。
+  </div>
+  <div class="meta">
+    开源项目 ai-content · GitHub 搜 CheeMao/ai-content
+  </div>
+</section>
+
+<!-- ---------- 07 收尾（行动） ---------- -->
+<section class="card p-end compact">
+  <div class="claim">
+    三件可以直接抄<br />一件必须知道
+  </div>
+  <div class="recap">
+    <div><b>信源固定好</b> — 你喂它什么，它就能挖出什么</div>
+    <div><b>定位写准</b> — 这是实打实的输入，写不准选题就是散的</div>
+    <div><b>出稿前核验</b> — 涉及收入、效果的句子，过一遍人眼再发</div>
+    <div><b>门槛在这</b> — 要自己部署：数据库 + Redis + 模型服务</div>
+  </div>
+  <div class="debate">
+    <div class="q">最大的问题是「要自己部署」还是「AI 写的不接地气」？</div>
+    <div class="sub">评论区站个队 👇</div>
+  </div>
+</section>
+
+</body>
+</html>
