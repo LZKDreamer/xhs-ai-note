@@ -511,17 +511,9 @@
   width: 100%;
   border-radius: var(--radius-sm);
 }
-.p-shot .frame .bar {
-  display: flex;
-  gap: var(--sp-1);
-  padding: 0 var(--sp-1) var(--sp-2);
-}
-.p-shot .frame .bar i {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--line-strong);
-}
+/* ⚠️ 这里原本有 .frame .bar（三个灰圆点）当"窗口条"，已删除：
+   ① 零信息——圆点不表达任何关系；② 我们的截图是网页后台，自带侧栏和标题栏，
+   再套一层外壳就是假的。截图靠 .frame 的粗边 + 内边距 + 投影区分即可。 */
 .p-shot .mark {
   margin-top: auto;
   display: flex;

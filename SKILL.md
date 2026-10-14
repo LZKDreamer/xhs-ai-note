@@ -192,11 +192,14 @@ description: >-
 
 ```html
 <div class="frame">
-  <div class="bar"><i></i><i></i><i></i></div>
   <img src="./assets/xxx.png" alt="" />
 </div>
 <div class="mark"><div class="pin">1</div><div class="txt">标注说明</div></div>
 ```
+
+> **截图进 `.frame` 就够**：粗边框 + 内边距 + 投影会把它和暖白底分开。
+> ❌ **不要加假窗口条**（三个灰圆点那类）——零信息，而且我们的截图是网页后台，
+> 本来就有自己的侧栏和标题栏，再套一层外壳是假的。说明关系靠 `.mark` + `.pin` 编号标注。
 
 然后渲染：
 
