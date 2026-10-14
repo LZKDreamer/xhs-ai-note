@@ -65,7 +65,8 @@ D:\AI\repository\ai-study\
 │   ├── lint-tokens.mjs         ← 令牌守卫：裸色值 / 内联样式 / 魔法数字间距
 │   ├── contrast.mjs            ← 配色审计：按 WCAG 2.1 验收对比度
 │   ├── probe.mjs               ← 诊断：卡片尺寸、溢出、任意元素的计算样式
-│   └── net-probe.mjs           ← 诊断：抓取加载失败的资源（样式为何整体失效）
+│   ├── net-probe.mjs           ← 诊断：抓取加载失败的资源（样式为何整体失效）
+│   └── net-check.mjs           ← 自检：出网能力（推送失败时先跑它）
 │
 ├── fonts/                      ← 本地字体（得意黑 / Noto Sans SC / Geist Mono）
 │
@@ -127,7 +128,31 @@ node scripts/check.mjs
 node scripts/probe.mjs "<html>"                       # 页面尺寸与溢出
 node scripts/probe.mjs "<html>" --sel=".p-end .ask"   # 查某个元素的计算样式
 node scripts/net-probe.mjs "<html>"                   # 样式/字体为何没加载
+node scripts/net-check.mjs                            # 出网能力自检（推送失败时先跑它）
 ```
+
+## 推送到 GitHub
+
+```powershell
+git push
+```
+
+**注意：本仓库的推送依赖本机代理。** `git` 不读取 Windows 的系统代理设置，
+而当前网络下 GitHub 直连不可达（`node` / `git` 都会超时，但 `npm` 可达）。
+因此代理已写进**本仓库的本地配置**（不影响全局 git）：
+
+```powershell
+# 已配置（如需重设）
+git config --local http.proxy  http://127.0.0.1:10808
+git config --local https.proxy http://127.0.0.1:10808
+
+# 代理端口变了就改这里；换机器或关掉代理后推送会超时
+```
+
+**换机器时的排查顺序**：
+1. 跑 `node scripts/net-check.mjs`，看 GitHub 是否可达
+2. 不可达 → 确认本机代理端口（系统代理见「设置 → 网络和 Internet → 代理」）
+3. 按上面的命令更新本仓库代理配置
 
 ## 待办与已完成
 

@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 第 5 轮：入库与推送
+
+### 新增
+- `.gitignore` — 只忽略可重新生成的产物（`output/*/images/`、`templates/_*-out/`），
+  源文件（note.html / 笔记.md / tokens.css / 字体 / 脚本 / 文档）一律入库
+- `.gitattributes` — 全部文本以 LF 入库，二进制与字体子集做标记，避免跨平台整文件 diff
+- `scripts/net-check.mjs` — 出网能力自检，用于判断「推送失败」是环境问题还是仓库问题
+
+### 推送踩的坑
+9. **`git` 不读取 Windows 系统代理**。本机系统代理为 `127.0.0.1:10808`，
+   PowerShell 的 `Invoke-WebRequest` 能通 GitHub，但 `git` 直连超时（443 端口连不上），
+   `node` 访问 github.com 也超时（而 npm registry 可达）——说明是 GitHub 域名在当前网络下不可达，
+   不是仓库、URL 或凭据问题。
+   解决：把代理写进**本仓库的本地配置**（`git config --local`），不动全局设置。
+
+   排查经验：先用 `node scripts/net-check.mjs` 分离「环境不通」与「仓库有问题」，
+   再检查系统代理设置（`HKCU:\...\Internet Settings\ProxyServer`）与本地监听端口。
+
+---
+
 ## 第 4 轮：补齐「好设计系统」的五项短板
 
 ### 目标
