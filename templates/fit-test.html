@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>自动适配 · 压力测试</title>
+<link rel="stylesheet" href="./components.css" />
+</head>
+<body>
+
+<!-- ================================================================
+     自动适配压力测试
+     这不是给人看的笔记，是用来验证 render.mjs 的兜底能力：
+     故意塞入超出 1440px 的内容，检查脚本是否按预期降 Scaling 而不是裁掉。
+     预期：01 不缩放；02 轻微缩放；03 缩到下限并报警。
+
+     跑法：
+       node scripts/render.mjs templates/fit-test.html templates/_fit-out --min-zoom=0.55
+     应当看到缩放报告，且 0 张残留溢出（退出码 0）。
+     ================================================================ -->
+
+<!-- 01：刚好放下（预期不缩放） -->
+<section class="card p-list sm-dense">
+  <div class="eyebrow">预期：不缩放</div>
+  <div class="t-title">四条要点<br />正常密度</div>
+  <div class="items mt-24">
+    <div class="item"><div class="n">1</div><div class="body"><div class="h">刚好放下</div><div class="d">内容高度接近但不超过可用高度时，脚本应当完全不干预。</div></div></div>
+    <div class="item"><div class="n">2</div><div class="body"><div class="h">保持原始字号</div><div class="d">缩放在 1% 以内会被忽略，避免每次重渲染都触发边界抖动。</div></div></div>
+    <div class="item"><div class="n">3</div><div class="body"><div class="h">安全余量 3%</div><div class="d">只用到 97% 的可用高度，防止像素取整后仍被裁。</div></div></div>
+    <div class="item"><div class="n">4</div><div class="body"><div class="h">可复现</div><div class="d">同一份 HTML 每次渲染得到相同结果。</div></div></div>
+  </div>
+</section>
+
+<!-- 02：中度过量（预期轻微缩放） -->
+<section class="card p-list">
+  <div class="eyebrow">预期：轻微缩放</div>
+  <div class="t-title">六条要点<br />略微超出</div>
+  <div class="items mt-24">
+    <div class="item"><div class="n">1</div><div class="body"><div class="h">内容略多于可用高度</div><div class="d">脚本应当自动找到一个缩放值把它压回安全区，而不是截断。</div></div></div>
+    <div class="item"><div class="n">2</div><div class="body"><div class="h">文字重新排版</div><div class="d">用 zoom 而非等比缩放，文字会更早换行，观感比拉伸更自然。</div></div></div>
+    <div class="item"><div class="n">3</div><div class="body"><div class="h">字号仍在可读范围</div><div class="d">只需缩到 90% 以上时，读者几乎察觉不到。</div></div></div>
+    <div class="item"><div class="n">4</div><div class="body"><div class="h">报告会写明数值</div><div class="d">输出自然高度、可用高度与实际缩放比，便于判断要不要精简文字。</div></div></div>
+    <div class="item"><div class="n">5</div><div class="body"><div class="h">低于 90% 会提示</div><div class="d">带感叹号提醒，说明内容偏多。</div></div></div>
+    <div class="item"><div class="n">6</div><div class="body"><div class="h">低于下限会报警</div><div class="d">缩到 70% 仍放不下时，退出码非 0，必须拆页。</div></div></div>
+  </div>
+</section>
+
+<!-- 03：明显超量但可容纳（预期缩到 85% 左右并提示精简） -->
+<section class="card p-list">
+  <div class="eyebrow">预期：缩小并提示</div>
+  <div class="t-title">八条要点<br />明显超量</div>
+  <div class="items mt-24">
+    <div class="item"><div class="n">1</div><div class="body"><div class="h">内容明显超出一页</div><div class="d">用来验证脚本会给出「建议精简文字」的提示而不是报警。</div></div></div>
+    <div class="item"><div class="n">2</div><div class="body"><div class="h">缩放区间在 70% 到 90% 之间</div><div class="d">这个区间仍然可读，但已接近舒适度边界。</div></div></div>
+    <div class="item"><div class="n">3</div><div class="body"><div class="h">要不要接受这个缩放</div><div class="d">视觉上能看出字变小，优先考虑删掉一条要点。</div></div></div>
+    <div class="item"><div class="n">4</div><div class="body"><div class="h">更稳的做法是换变体</div><div class="d">改用 dense 变体通常能把缩放需求消掉大半。</div></div></div>
+    <div class="item"><div class="n">5</div><div class="body"><div class="h">再不行就拆页</div><div class="d">两页各讲一半，比一页挤八条读起来轻松。</div></div></div>
+    <div class="item"><div class="n">6</div><div class="body"><div class="h">脚本只兜底</div><div class="d">它保证不出废图，内容取舍仍由作者判断。</div></div></div>
+    <div class="item"><div class="n">7</div><div class="body"><div class="h">每次渲染可复现</div><div class="d">同样的 HTML 得到同样的缩放值。</div></div></div>
+    <div class="item"><div class="n">8</div><div class="body"><div class="h">这一条保证溢出</div><div class="d">但总量控制在下限之上，因此只提示不报警。</div></div></div>
+  </div>
+</section>
+
+</body>
+</html>

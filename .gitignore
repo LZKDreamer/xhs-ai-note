@@ -1,0 +1,47 @@
+# ==========================================================================
+# .gitignore — 小红书 AI 图文项目
+#
+# 原则：只忽略「可由命令重新生成」的产物，源文件一律入库。
+#
+#   入库（源）：tokens.css / components.css / note.html / 笔记.md / 文档 / 脚本 / 字体
+#   忽略（产物）：渲染出的 PNG、样式总览与压力测试的输出、系统与编辑器垃圾
+#
+# 出图产物不入库的原因：内容一改就要重出，提交它们只会制造无意义的 diff。
+# 需要图片时跑：
+#   node scripts/render.mjs "output/<笔记目录>/note.html" "output/<笔记目录>/images"
+#   node scripts/check.mjs      # 全套验收（会重建下面这些 _*-out 目录）
+# ==========================================================================
+
+# ---------- 出图产物 ----------
+output/*/images/
+templates/_styleguide-out/
+templates/_fit-out/
+
+# 防护：任何以 _ 开头、以 -out 结尾的临时输出目录
+*-out/
+
+# ---------- 操作系统 ----------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# ---------- 编辑器 / IDE ----------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------- 依赖与缓存 ----------
+node_modules/
+.pnpm-store/
+.npm/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# ---------- 脚本运行期临时文件 ----------
+.probe/
+*.tmp

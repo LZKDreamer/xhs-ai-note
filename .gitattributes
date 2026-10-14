@@ -1,0 +1,39 @@
+# ==========================================================================
+# .gitattributes — 固定换行符与二进制标记
+#
+# 目的：Windows 上编辑、macOS/Linux 上使用的协作者不会因为 CRLF/LF 差异产生
+#      整文件 diff。所有文本文件统一以 LF 入库，检出时由各端自行处理。
+# ==========================================================================
+
+# 默认：自动识别文本，统一 LF 入库
+* text=auto eol=lf
+
+# 明确指定文本类型
+*.md      text eol=lf
+*.css     text eol=lf
+*.html    text eol=lf
+*.mjs     text eol=lf
+*.js      text eol=lf
+*.json    text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+
+# Windows 专用脚本保留 CRLF（如有）
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+*.ps1     text eol=crlf
+
+# 二进制：不做换行符转换，也不要尝试 diff
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.ico     binary
+*.woff    binary
+*.woff2   binary
+*.ttf     binary
+*.otf     binary
+
+# 字体子集数量多，折叠显示
+fonts/noto-sans-sc/** linguist-generated=true

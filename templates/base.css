@@ -1,0 +1,130 @@
+/* ==========================================================================
+   base.css — 画布 / 栅格 / 排版原子
+   每张图 = 一个 <section class="card">，固定 1080×1440。
+   本文件由 components.css 通过 @import 引入，不要单独引用。
+   ========================================================================== */
+
+@font-face {
+  font-family: "SmileySans";
+  src: url("../fonts/SmileySans-Oblique.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "GeistMono";
+  src: url("../fonts/GeistMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: block;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body {
+  background: var(--canvas-bg);
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+
+body {
+  display: grid !important;
+  justify-items: center;
+  gap: 40px;
+  padding: 40px 0;
+}
+
+/* 每张卡片：尺寸用 !important 锁死，避免被页型类的 display 声明覆盖 */
+.card {
+  position: relative;
+  width: var(--w) !important;
+  height: var(--h) !important;
+  padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+  background: var(--bg);
+  color: var(--ink);
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden;
+}
+
+/* 卡片底纹：细网格，弱化但提供「数据感」 */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 96px 96px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.card > * {
+  position: relative;
+}
+
+/* ---------- 排版原子 ---------- */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--fs-8);
+  font-weight: 700;
+  color: var(--brand-700);
+  letter-spacing: 0.1em;
+  flex: none;
+}
+.eyebrow::before {
+  content: "";
+  width: 44px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--brand-500);
+}
+
+.t-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-3);
+  line-height: var(--lh-title);
+  letter-spacing: 0.01em;
+  flex: none;
+}
+.t-lead {
+  font-size: var(--fs-4);
+  font-weight: 700;
+  line-height: 1.35;
+}
+.t-h3 {
+  font-size: var(--fs-5);
+  font-weight: 900;
+  line-height: 1.3;
+}
+.t-body {
+  font-size: var(--fs-6);
+  line-height: var(--lh-body);
+  color: var(--ink-2);
+}
+.t-body strong,
+.t-lead strong,
+.t-h3 strong {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.hl {
+  background: linear-gradient(transparent 58%, var(--brand-200) 58%);
+  padding: 0 4px;
+}
+.hl-ink {
+  color: var(--brand-600);
+}
+
+/* ---------- 旧版页眉页脚：仅作兼容保留，新笔记不要使用 ---------- */
+.c-head,
+.c-foot {
+  display: none;
+}
