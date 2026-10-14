@@ -23,23 +23,35 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 CONTACT_W = 900          # 接触印相里每块缩到的宽度
-LABEL_H = 30             # 每块上方的标签条高度
+LABEL_H = 54             # 每块上方的标签条高度（坐标一行 + 裁切理由一行）
 GAP = 14                 # 块间距
 PAD = 18                 # 印相外边距
 
 
-def load_font(size=16):
-    for p in (
-        r"C:\Windows\Fonts\consola.ttf",
-        r"C:\Windows\Fonts\arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ):
+def load_font(size=16, cjk=False):
+    """等宽字体给坐标用；CJK 字体给裁切理由用（consola 画中文会变成方块）。"""
+    if cjk:
+        candidates = (r"C:\Windows\Fonts\msyh.ttc", r"C:\Windows\Fonts\simhei.ttf")
+    else:
+        candidates = (r"C:\Windows\Fonts\consola.ttf", r"C:\Windows\Fonts\arial.ttf")
+    for p in candidates + ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",):
         if Path(p).exists():
             try:
                 return ImageFont.truetype(p, size)
             except OSError:
                 pass
     return ImageFont.load_default()
+
+
+def ellipsize(text, font, max_w, draw):
+    if draw.textlength(text, font=font) <= max_w:
+        return text
+    out = ""
+    for ch in text:
+        if draw.textlength(out + ch + "…", font=font) > max_w:
+            break
+        out += ch
+    return out + "…"
 
 
 def clamp_crop(box, w, h):
@@ -52,26 +64,37 @@ def clamp_crop(box, w, h):
 
 
 def build_contact(tiles, out_path):
-    """把裁切结果竖着拼成一张图，每块上方标 id 与尺寸，用于人工复核。"""
-    font = load_font(17)
+    """把裁切结果竖着拼成一张图。每块上方两行：
+       第一行坐标（等宽字体），第二行该图的裁切理由（中文）—— 复核裁切时理由就在旁边。"""
+    meta_font = load_font(17)
+    why_font = load_font(16, cjk=True)
     scaled = []
-    for sid, im, box in tiles:
+    for sid, im, box, reason in tiles:
         ratio = CONTACT_W / im.width
-        scaled.append((sid, im.resize((CONTACT_W, max(1, round(im.height * ratio)))), box))
+        scaled.append(
+            (sid, im.resize((CONTACT_W, max(1, round(im.height * ratio)))), box, reason)
+        )
 
-    total_h = PAD * 2 + sum(LABEL_H + im.height + GAP for _, im, _ in scaled) - GAP
+    total_h = PAD * 2 + sum(LABEL_H + im.height + GAP for _, im, _, _ in scaled) - GAP
     sheet = Image.new("RGB", (CONTACT_W + PAD * 2, total_h), (24, 22, 20))
     draw = ImageDraw.Draw(sheet)
 
     y = PAD
-    for sid, im, box in scaled:
-        draw.rectangle([PAD, y, PAD + CONTACT_W, y + LABEL_H - 6], fill=(38, 34, 30))
+    for sid, im, box, reason in scaled:
+        draw.rectangle([PAD, y, PAD + CONTACT_W, y + LABEL_H - 8], fill=(38, 34, 30))
         draw.text(
             (PAD + 10, y + 3),
             f"{sid}   crop {box[2]-box[0]}x{box[3]-box[1]}   from ({box[0]},{box[1]})-({box[2]},{box[3]})",
             fill=(250, 200, 140),
-            font=font,
+            font=meta_font,
         )
+        if reason:
+            draw.text(
+                (PAD + 10, y + 27),
+                ellipsize(reason, why_font, CONTACT_W - 20, draw),
+                fill=(170, 160, 150),
+                font=why_font,
+            )
         y += LABEL_H
         sheet.paste(im, (PAD, y))
         draw.rectangle([PAD, y, PAD + CONTACT_W - 1, y + im.height - 1], outline=(249, 115, 22), width=2)
@@ -133,7 +156,7 @@ def build_html(shots):
         body = '<div class="frame mt-24">' + img + "".join(overlay) + "</div>" + marks_block
 
         sections.append(
-            f'<section class="card p-shot {sid}">\n'
+            f'<section class="card p-shot {sid}" id="p{s["page"]}">\n'
             '  <div class="flexcol">\n'
             f'    <div class="eyebrow">{s["eyebrow"]}</div>\n'
             f'    <div class="t-title">{s["title"]}</div>\n'
@@ -181,11 +204,13 @@ def main():
         crop = im.crop(box)
         out = assets / f"{s['id']}.png"
         crop.save(out, optimize=True)
-        tiles.append((s["id"], crop, box))
+        tiles.append((s["id"], crop, box, s.get("reason", "")))
         print(
             f"  {s['id']:<9} src {im.width}x{im.height} -> crop {box[2]-box[0]}x{box[3]-box[1]}"
             f"  ratio {(box[2]-box[0])/(box[3]-box[1]):.2f}  {out.stat().st_size//1024} KB"
         )
+        if s.get("reason"):
+            print(f"            why: {s['reason']}")
 
     size = build_contact(tiles, assets / "_contact.png")
     print(f"  contact sheet: {size[0]}x{size[1]} -> {assets / '_contact.png'}")

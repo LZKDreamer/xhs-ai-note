@@ -7,11 +7,12 @@
 //   规则写了而脚本不拦，等于没写——所以第 0 步就是内容守卫。
 //
 //   0. 内容守卫   —— 标题公式映射 / 主角名 / 字数 / 禁用词 / 能带走的页
-//   1. 令牌守卫   —— 不许出现裸色值、内联样式、魔法数字间距
-//   2. 配色审计   —— 对比度必须达标（WCAG 2.1）
-//   3. 组件总览   —— styleguide 必须能正常渲染
-//   4. 压力测试   —— 溢出兜底逻辑必须生效
-//   5. 成品笔记   —— output/ 下每条笔记都必须零溢出且尺寸正确
+//   1. 文档一致性 —— 文档提到的组件 class 和 shots.json 字段必须真实存在
+//   2. 令牌守卫   —— 不许出现裸色值、内联样式、魔法数字间距
+//   3. 配色审计   —— 对比度必须达标（WCAG 2.1）
+//   4. 组件总览   —— styleguide 必须能正常渲染
+//   5. 压力测试   —— 溢出兜底逻辑必须生效
+//   6. 成品笔记   —— output/ 下每条笔记都必须零溢出且尺寸正确
 //
 // 任何一项失败，退出码非 0。
 import { spawn } from "node:child_process";
@@ -45,7 +46,14 @@ await step("内容守卫（标题公式 / 主角名 / 字数 / 禁用词 / 能�
   return r.code === 0;
 });
 
-// ---------- 1. 令牌守卫 ----------
+// ---------- 1. 文档一致性（文档说 A、实现是 B，就是在骗下一个人） ----------
+await step("文档一致性（组件 class / shots.json 字段）", async () => {
+  const r = await run(["scripts/check-docs.mjs"]);
+  process.stdout.write(r.out + "\n");
+  return r.code === 0;
+});
+
+// ---------- 2. 令牌守卫 ----------
 await step("令牌守卫（裸色值 / 内联样式 / 魔法数字）", async () => {
   const r = await run(["scripts/lint-tokens.mjs"]);
   process.stdout.write(r.out.split("\n").slice(-6).join("\n") + "\n");
