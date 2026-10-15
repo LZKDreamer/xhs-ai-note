@@ -30,6 +30,9 @@
 //   W4  启发式提醒：正文没有收藏引导（知识号核心 KPI 是收藏率）
 //   W5  启发式提醒：正文前 3 行没有钩子标记（人称/数字/疑问/否定/反常识）
 //   W6  评分字段格式提醒（可选，标题与封面规范 §二·六）
+//   W10 启发式提醒：封面视觉证据用的是流程链路条(.chain)，有对比关系时优先用对比卡/数据对比条
+//   W11 启发式提醒：封面副标题偏说明句，建议改为承诺句
+//   W12 启发式提醒：角标偏形式型，优先数据型/利益型
 //
 // 检查项（视频 / 口播稿）：
 //   C7v  口播稿禁用词
@@ -234,6 +237,52 @@ async function checkNote(dirName) {
       errors.push(
         `C15 封面钩子标签「${hookText}」只是项目名、没有人群词/数字/紧迫感——` +
           "钩子标签只给人群词或紧迫感（标题与封面规范 §一/§六·一）；项目名放副标题即满足 C2"
+      );
+    }
+  }
+
+  // ---- C17 封面视觉证据类型检查 ----
+  // 优先对比卡(.duo) / 数据对比条(.bar) / 核心数据块(.stat)；流程链路条(.chain)提醒
+  const hasDuo = cover.includes('class="duo"') || cover.includes("class='duo'");
+  const hasBar = cover.includes('class="bar"') || cover.includes("class='bar'");
+  const hasStat = cover.includes('class="stat"') || cover.includes("class='stat'");
+  const hasChain = cover.includes('class="chain"') || cover.includes("class='chain'");
+  if (hasChain && !hasDuo && !hasBar && !hasStat) {
+    warns.push(
+      "W10 封面视觉证据用的是流程链路条(.chain)——对比卡(.duo)/数据对比条(.bar)/核心数据块(.stat)冲击力更强，" +
+        "有对比关系时优先用它们（标题与封面规范 §六·〇）"
+    );
+  }
+
+  // ---- C18 副标题承诺句检查 ----
+  // 副标题出现在 .sub 里；检测说明性关键词
+  const subMatch = cover.match(/<div class="sub">([\s\S]*?)<\/div>/);
+  if (subMatch) {
+    const subText = stripTags(subMatch[1]).trim();
+    const descriptiveWords = ["项目", "系统", "介绍", "是", "就是", "一个", "一款"];
+    const isDescriptive = descriptiveWords.some(w => subText.includes(w)) &&
+      !subText.match(/[你给把让帮帮]/); // 承诺句通常有"你/给/把/让/帮"等人称或动作词
+    if (isDescriptive && subText.length > 0) {
+      warns.push(
+        `W11 封面副标题「${subText}」偏说明句——建议改为承诺句，回答「你能得到什么」` +
+          "（如「打开后台，素材选题初稿都摆好了」），而非「这是什么」（标题与封面规范 §六·三）"
+      );
+    }
+  }
+
+  // ---- C19 角标类型检查 ----
+  const chips = [...cover.matchAll(/<div class="chip(?: on)?">([\s\S]*?)<\/div>/g)];
+  const formTypeChips = ["真实界面", "图文详解", "附部署门槛", "视频讲解", "附教程"];
+  for (const chip of chips) {
+    const chipText = stripTags(chip[1]).trim();
+    // 检测是否为纯形式型角标
+    const isFormType = formTypeChips.some(w => chipText.includes(w));
+    const hasData = /\d/.test(chipText) || chipText.includes("⭐");
+    const hasBenefit = chipText.includes("附") || chipText.includes("零基础") || chipText.includes("收藏");
+    if (isFormType && !hasData && !hasBenefit) {
+      warns.push(
+        `W12 角标「${chipText}」偏形式型——优先用数据型（GitHub 200+⭐）或利益型（附三步配置），` +
+          "形式型仅在无数据可用时兜底（标题与封面规范 §六·四）"
       );
     }
   }

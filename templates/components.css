@@ -288,6 +288,75 @@
   color: var(--brand-600);
 }
 
+/* ============================ 01 封面 · 数据对比条 ============================
+   数字前后对比：3h → 0min、100 条 → 2 篇。
+   用于有具体数字对比的场景，冲击力高于流程链路条。
+   优先级：对比卡(.duo) > 数据对比条(.bar) > 大数字块(.stat) > 流程链路条(.chain)
+   ========================================================================== */
+.p-cover .bar {
+  margin-top: var(--sp-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 3px solid var(--line-strong);
+  flex: none;
+}
+.p-cover .bar .side {
+  text-align: center;
+}
+.p-cover .bar .side .num {
+  font-family: var(--font-display);
+  font-size: var(--fs-3);
+  line-height: 1;
+  color: var(--ink);
+}
+.p-cover .bar .side .num.del {
+  color: var(--ink-3);
+  text-decoration: line-through;
+  text-decoration-thickness: 5px;
+}
+.p-cover .bar .side .lbl {
+  font-size: var(--fs-8);
+  color: var(--ink-3);
+  margin-top: var(--sp-1);
+}
+.p-cover .bar .arr {
+  font-size: var(--fs-4);
+  color: var(--brand-600);
+  font-weight: 900;
+  flex: none;
+}
+.p-cover .bar .side.to .num {
+  color: var(--brand-600);
+}
+
+/* ============================ 01 封面 · 核心数据块 ============================
+   单一大数字独立成视觉锚点：2000、100、90%。
+   数字与标题分离，占视觉主导。
+   ========================================================================== */
+.p-cover .stat {
+  margin-top: var(--sp-5);
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  flex: none;
+}
+.p-cover .stat .num {
+  font-family: var(--font-display);
+  font-size: var(--fs-1);
+  line-height: 1;
+  color: var(--brand-600);
+}
+.p-cover .stat .unit {
+  font-size: var(--fs-5);
+  color: var(--ink-2);
+  font-weight: 700;
+}
+
 /* ============================ 02 痛点（浅色） ============================ */
 .p-pain {
   background: var(--bg);
